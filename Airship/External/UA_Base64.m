@@ -85,6 +85,7 @@ void *UA_NewBase64Decode(
         // Accumulate 4 valid characters (ignore everything else)
         //
         unsigned char accumulated[BASE64_UNIT_SIZE];
+        memset( accumulated, 0, BASE64_UNIT_SIZE );
         size_t accumulateIndex = 0;
         while (i < length)
         {
