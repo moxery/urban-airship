@@ -111,6 +111,10 @@ BOOL logging = false;
         config = [NSMutableDictionary dictionaryWithDictionary:[options objectForKey:UAirshipTakeOffOptionsAirshipConfigKey]];
     }
 
+    if ( ! config.count ) {
+        [config addEntriesFromDictionary:options];
+    }
+
     if ([config count] > 0) {
         
         BOOL inProduction = [[config objectForKey:@"APP_STORE_OR_AD_HOC_BUILD"] boolValue];
