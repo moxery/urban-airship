@@ -109,6 +109,7 @@ static BOOL runiPhoneTargetOniPad = NO;
 
         [ui.rootViewController viewWillAppear:animated];
         [ui.uaWindow makeKeyAndVisible];
+        ui.originalWindow.hidden = YES;
     }
     
     ui->isVisible = YES;
@@ -128,7 +129,14 @@ static BOOL runiPhoneTargetOniPad = NO;
         [ui.rootViewController viewWillDisappear:ui->animated];
     }
 
-    if (ui.rootViewController.parentViewController != nil) {
+    UIViewController *presentingViewController = nil;
+    if ([ui.rootViewController respondsToSelector:@selector(presentingViewController)]) {
+        presentingViewController = [ui.rootViewController presentingViewController]; //iOS5 method
+    } else {
+        presentingViewController = ui.rootViewController.parentViewController;// <= 4.x
+    }
+    
+    if (presentingViewController != nil) {
         // for iPhone/iPod displayStoreFront:animated:
         [ui.rootViewController dismissModalViewControllerAnimated:ui->animated];
 
@@ -138,6 +146,9 @@ static BOOL runiPhoneTargetOniPad = NO;
         // Return control to original window
         [ui.originalWindow makeKeyAndVisible];
         ui.originalWindow = nil;
+
+        [ui.rootViewController.view removeFromSuperview];
+        ui.uaWindow = nil;
 
     } else {
         // For other circumstances. e.g custom showing rootViewController or changed the showing code of StoreFront
