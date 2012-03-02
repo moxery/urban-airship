@@ -174,7 +174,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 - (void)resetStatus {
     // Check permament status
-    NSDictionary* item = [[UAStoreFront shared].purchaseReceipts objectForKey:productIdentifier];
+    NSDictionary *item = [[UAStoreFront shared].purchaseReceipts objectForKey:productIdentifier];
     if (item != nil) {
         receipt = [[item objectForKey:@"receipt"] copy];
         if(revision > [[item objectForKey:@"revision"] intValue]) {
@@ -182,6 +182,8 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         } else {
             if ([[UAStoreFront shared].downloadManager hasPendingProduct:self]) {
                 self.status = UAProductStatusPurchased;
+            } else if ([[UAStoreFront shared].downloadManager hasDecompressingProduct:self]) {
+                self.status = UAProductStatusDecompressing;
             } else {
                 self.status = UAProductStatusInstalled;
             }

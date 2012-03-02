@@ -1,3 +1,97 @@
+--------------------------
+1.1.4 - January 26, 2012
+--------------------------
+- Added nil product check to pending download and decompression logic
+- Cleared sessions have an empty string session_id value after app backgrounding 
+
+--------------------------
+1.1.3 - December 30, 2011
+--------------------------
+
+- Fixed incompatibility between ASIHTTPRequest and UA_ASIHTTPRequest introduced in recent update
+- Fixed Subscriptions decompression path bug that resulted in content unzipping into a
+  content key subdirectory
+
+--------------------------
+1.1.2 - December 20, 2011
+--------------------------
+
+- Updated HTTP client libraries
+- IAP and Subscription content URLs are cached for 24 hours after purchase
+- Improvements to resuming incomplete installs for IAP and Subscription content
+- Subscriptions UI now supports free subscriptions
+- Subscriptions checks if products are available before submitting receipts
+- FIX: takeOff no longer crashes if the build field in Xcode is not set
+- FIX: Downloaded content is stored in Caches on iOS 5.0 and marked with the "do not back up"
+  attribute on iOS 5.0.1
+- FIX: Tag API is working properly
+- FIX: Inbox "Mark as Read" button is unavailable once a message is marked as read
+
+--------------------------
+1.1.1 - October 23, 2011
+--------------------------
+
+- Registrations will no longer be performed when the app is running in the background
+- FIX: Background download tasks will only be created when there are pending downloads.
+- FIX: Properly release UIAlertView displayed in the Inbox UI when messages arrive while the app
+  is running.
+
+--------------------------
+1.1.0 - October 10, 2011
+--------------------------
+
+General:
+- Code-level docs are available at http://urbanairship.com/docs/ios-lib/ (a work in progress)
+- Silenced analytics/reports-related logging by default.
+- Added new iOS5-related analytics events
+- Trim whitespace from AirshipConfig.plist keys and secrets
+- Removed the need for extra linker flags (all_load and the weak ref to libSystem.B)
+
+IAP:
+- Fixed decompression failure error message text in In-App Purchase
+
+Push:
+- Fix URL-encoding issue in UAPush single-tag methods
+- UAPushNotificationDelegate's methods are now optional
+- Fixed a UAPushNotificationDelegate selector with an empty parameter name
+
+Subscriptions:
+- Fixed a bug in the autorenewable product renewal flow. Renewals are now handled properly.
+- Fixed a bug in the SKTransaction handling when both SubscriptionLib and StoreFrontLib were used.
+- Fixed a bug in subscription receipt validation. Transactions are now kept open until a receipt
+  is validated.
+
+InboxLib:
+- Major updates to InboxLib and the Rich Push Inbox sample
+- Methods and properties related to setting the "active" inbox have been eliminated or renamed
+- UAInboxAlertProtocol has been removed
+- The inbox database has been renamed from "Airmail.db" to "UAInbox.db"
+- Inbox messages can carry an explicit content type other than text/html
+- UAInboxMessageList supports concurrent batch updates
+- Message extras are now retrieved and cached locally
+- Improvements to message and asset cache for performance
+- Improvements to Obj-C <-> Javascript bridge
+- Added message id and user id values to the message detail's JS environment
+- See http://support.urbanairship.com/customer/portal/articles/200710-upgrading-to-rich-push-in-1-1-
+  for information on specific items added, removed or modified
+
+Inbox Protocols:
+- UAInboxMessageListObserver breaks out batch update events in explicit success/failure methods
+- Cleaner separation from UAUser observer patterns
+- New UAInboxPushHandlerDelegate protocol allows for a user-specified delegate to respond to 
+  incoming in-app messages
+
+Inbox UI Classes:
+- iPad specific classes and xib files have been removed
+- iPhone interfaces have been generalized to be adaptable to the iPad UI idiom
+- New UAInboxOverlayController allows for displaying incoming Rich Push messages 
+  in an overlay window superimposed over your content
+- UAInboxMessageListController and UAInboxMessageViewController have been redesigned to be 
+  embeddable in non-modal contexts, like navigation controller stacks and tab bar controllers
+- New UAInboxNavUI embeds the inbox in a navigation controller or popover controller
+- The InboxSample project allows you to select between multiple UI classes on the fly 
+  as a quick overview of the different inbox interface styles
+
 -------------------------
 1.0.7 - August 29, 2011
 -------------------------

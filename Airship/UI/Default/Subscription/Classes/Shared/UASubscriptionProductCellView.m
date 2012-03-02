@@ -120,7 +120,9 @@
 - (void)refreshDescriptionLabelView {
     if (product.purchased) {
         NSDateFormatter *generateStringformatter = [[[NSDateFormatter alloc] init] autorelease];
-        [generateStringformatter setDateStyle: NSDateFormatterMediumStyle]; // Will produce localized date
+        [generateStringformatter setDateStyle:NSDateFormatterMediumStyle]; // Will produce localized date
+        [generateStringformatter setTimeStyle:NSDateFormatterMediumStyle];
+        //[generateStringformatter setDateFormat:@"yyyy-MM-dd HH:mm:ss"];
 
         NSString *start = [generateStringformatter stringFromDate:product.startDate];
         NSString *end = [generateStringformatter stringFromDate:product.endDate];
@@ -131,12 +133,19 @@
 }
 
 - (void)updateTitle {
-    if (product.autorenewable) {
-        NSString *arDurationString = 
-            [UASubscriptionUIUtil localizedAutorenewableDuration:product.autorenewableDuration];
-        self.title = [product.title stringByAppendingFormat:@" (%@)", arDurationString];
-    } else {
-        self.title = product.title;
+    NSString* arDurationString;
+    switch (product.productType) {
+        case UASubscriptionProductTypeAutorenewable:
+            arDurationString = [UASubscriptionUIUtil localizedAutorenewableDuration:product.autorenewableDuration];
+            self.title = [product.title stringByAppendingFormat:@" (%@)", arDurationString];
+            break;
+        case UASubscriptionProductTypeFree:
+            arDurationString = UA_SS_TR(@"UA_Free_Subscription");
+            self.title = [product.title stringByAppendingFormat:@" (%@)", arDurationString];
+            break;
+        default:
+            self.title = product.title;
+            break;
     }
 }
 

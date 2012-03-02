@@ -24,10 +24,14 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #import "UAirship.h"
-#import "UAUser.h"
-#import "UAUtils.h"
+
 #import "UA_ASIHTTPRequest.h"
 #import "UA_SBJSON.h"
+
+#import "UAUser.h"
+#import "UAAnalytics.h"
+#import "UAEvent.h"
+#import "UAUtils.h"
 #import "UAKeychainUtils.h"
 
 #define kAirshipProductionServer @"https://go.urbanairship.com"
@@ -43,6 +47,13 @@ NSString * const UAirshipTakeOffOptionsDefaultPasswordKey = @"UAirshipTakeOffOpt
 
 static UAirship *_sharedAirship;
 BOOL logging = false;
+
+@interface UAirship()
+// Update device token without remote registration
+// Private
+- (void)updateDeviceToken:(NSData *)token;
+- (void)configureUserAgent;
+@end
 
 @implementation UAirship
 
@@ -61,7 +72,6 @@ BOOL logging = false;
     RELEASE_SAFELY(appId);
     RELEASE_SAFELY(appSecret);
     RELEASE_SAFELY(server);
-    RELEASE_SAFELY(registerRequest);
     RELEASE_SAFELY(deviceToken);
     RELEASE_SAFELY(analytics);
 
@@ -147,6 +157,10 @@ BOOL logging = false;
             //[UAirship setLogging:YES];
         }
         
+        // strip leading and trailing whitespace
+        configAppKey = [configAppKey stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
+        configAppSecret = [configAppSecret stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
+        
         //Check for a custom UA server value
         NSString *airshipServer = [config objectForKey:@"AIRSHIP_SERVER"];
         if (airshipServer == nil) {
@@ -224,6 +238,8 @@ BOOL logging = false;
         
     }
     
+    [_sharedAirship configureUserAgent];
+    
     _sharedAirship.ready = true;
     _sharedAirship.analytics = [[[UAAnalytics alloc] initWithOptions:analyticsOptions] autorelease];
     
@@ -248,16 +264,19 @@ BOOL logging = false;
 
 + (void)land {
 
+    [[UA_ASIHTTPRequest sharedQueue] cancelAllOperations];
+    
 	// add app_exit event
     [_sharedAirship.analytics addEvent:[UAEventAppExit eventWithContext:nil]];
 	
     //Land the modular libaries first
+    [NSClassFromString(@"UAPush") land];
     [NSClassFromString(@"UAInbox") land];
     [NSClassFromString(@"UAStoreFront") land];
     [NSClassFromString(@"UASubscriptionManager") land];
     
     //Land common classes
-    [NSClassFromString(@"UAUser") land];
+    [UAUser land];
     
     //Finally, release the airship!
     [_sharedAirship release];
@@ -340,8 +359,23 @@ BOOL logging = false;
 #pragma mark -
 #pragma mark UA Registration request methods
 
-- (void)registerDeviceTokenWithExtraInfo:(NSDictionary *)info {
+- (void)registerDeviceToken:(NSData *)token {
 	
+    //register on UA server
+    [self registerDeviceToken:token withExtraInfo:nil];
+	
+}
+
+- (void)registerDeviceTokenWithExtraInfo:(NSDictionary *)info {
+
+    IF_IOS4_OR_GREATER(
+                       // if the application is backgrounded, do not send a registration
+                       if ([UIApplication sharedApplication].applicationState == UIApplicationStateBackground) {
+                           UALOG(@"Skipping DT registration. The app is currently backgrounded.");
+                           return;
+                       }
+    )
+    
     NSString *urlString = [NSString stringWithFormat:@"%@%@%@/",
                            server, @"/api/device_tokens/",
                            deviceToken];
@@ -363,8 +397,12 @@ BOOL logging = false;
 }
 
 - (void)registerDeviceToken:(NSData *)token withExtraInfo:(NSDictionary *)info {
+    
     [self updateDeviceToken:token];
     [self registerDeviceTokenWithExtraInfo:info];
+    
+    // add device_registration event
+    [self.analytics addEvent:[UAEventDeviceRegistration eventWithContext:nil]];
 }
 
 - (void)registerDeviceToken:(NSData *)token withAlias:(NSString *)alias {
@@ -395,17 +433,33 @@ BOOL logging = false;
     [request startAsynchronous];
 }
 
-#pragma mark -
-#pragma mark Callback for succeed register APN device token
-
-- (void)registerDeviceToken:(NSData *)token {
-	
-    // succeed register APN device token, then register on UA server
-    [self registerDeviceToken:token withExtraInfo:nil];
+- (void)configureUserAgent
+{
+    /*
+     * [LIB-101] User agent string should be:
+     * App 1.0 (iPad; iPhone OS 5.0.1; UALib 1.1.2; <app key>; en_US)
+     */
     
-    // add device_registration event
-    [self.analytics addEvent:[UAEventDeviceRegistration eventWithContext:nil]];
-	
+    UIDevice *device = [UIDevice currentDevice];
+    
+    NSBundle *bundle = [NSBundle mainBundle];
+    NSDictionary *info = [bundle infoDictionary];
+    
+    NSString *appName = [info objectForKey:(NSString*)kCFBundleNameKey];
+    NSString *appVersion = [info objectForKey:(NSString*)kCFBundleVersionKey];
+    
+    NSString *deviceModel = [device model];
+    NSString *osName = [device systemName];
+    NSString *osVersion = [device systemVersion];
+    
+    NSString *libVersion = [AirshipVersion get];
+    NSString *locale = [[NSLocale currentLocale] localeIdentifier];
+    
+    NSString *userAgent = [NSString stringWithFormat:@"%@ %@ (%@; %@ %@; UALib %@; %@; %@)",
+                           appName, appVersion, deviceModel, osName, osVersion, libVersion, appId, locale];
+    
+    UALOG(@"Setting User-Agent for UA requests to %@", userAgent);
+    [UA_ASIHTTPRequest setDefaultUserAgentString:userAgent];
 }
 
 @end

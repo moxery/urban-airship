@@ -4,12 +4,14 @@
 *.mode1v3
 *.pbxuser
 *.perspective*
-docs/
+docs/html/
+docs/docset/
 Debug/
 Release/
 Distribution/
 build/
-Airship/libUAirship-*.a
+Airship/*.a
 xcuserdata/
 *.xcworkspace/
 AirshipConfig.plist
+fabfile.py*

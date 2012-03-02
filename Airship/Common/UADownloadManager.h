@@ -25,10 +25,16 @@
 
 #import <Foundation/Foundation.h>
 #import <StoreKit/StoreKit.h>
-#import "UA_ASIHTTPRequest.h"
-#import "UA_ASIHTTPRequestDelegate.h"
-#import "UA_ASINetworkQueue.h"
-#import "UADownloadContent.h"
+#import "UALocalStorageDirectory.h"
+
+#define kUADirectory [UALocalStorageDirectory uaDirectory].path
+
+#define kUADownloadDirectory [[UALocalStorageDirectory uaDirectory] subDirectoryWithPathComponent:@"/downloads"]
+
+#define kDownloadHistoryFile [[UALocalStorageDirectory uaDirectory].path stringByAppendingPathComponent:@"/download.history"]
+
+@class UA_ASINetworkQueue;
+@class UADownloadContent;
 
 @protocol UADownloadManagerDelegate <NSObject>
 @optional

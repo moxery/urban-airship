@@ -24,10 +24,14 @@
  */
 
 #import "UAStoreFront.h"
-#import "UAStoreKitObserver.h"
-#import "UAInventory.h"
+
 #import "UA_ASIDownloadCache.h"
+
+#import "UAStoreKitObserver.h"
+#import "UAProduct.h"
+#import "UAInventory.h"
 #import "UAStoreFrontDownloadManager.h"
+
 
 UA_VERSION_IMPLEMENTATION(StoreFrontVersion, UA_VERSION)
 
@@ -40,6 +44,10 @@ UA_VERSION_IMPLEMENTATION(StoreFrontVersion, UA_VERSION)
 @synthesize purchaseReceipts;
 
 SINGLETON_IMPLEMENTATION(UAStoreFront)
+
++ (BOOL)initialized {
+    return g_sharedUAStoreFront ? YES : NO;
+}
 
 #pragma mark -
 #pragma mark History Receipts
@@ -164,7 +172,10 @@ static Class _uiClass;
 #pragma mark Open API, enter/quit StoreFront
 
 + (void)land {
-    [[SKPaymentQueue defaultQueue] removeTransactionObserver:[UAStoreFront shared].sfObserver];
+    if (g_sharedUAStoreFront) {
+        [[SKPaymentQueue defaultQueue] removeTransactionObserver:[UAStoreFront shared].sfObserver];
+        RELEASE_SAFELY(g_sharedUAStoreFront);
+    }
 }
 
 + (void)displayStoreFront:(UIViewController *)viewController animated:(BOOL)animated {
@@ -243,7 +254,7 @@ static Class _uiClass;
 #pragma mark -
 #pragma mark Open API, products operations
 
-+ (NSArray *)productsForType:(ProductType)type {
++ (NSArray *)productsForType:(UAProductType)type {
     return [[UAStoreFront shared].inventory productsForType:type];
 }
 
@@ -285,17 +296,6 @@ static Class _uiClass;
     UALOG(@"Initialize StoreFront.");
 
     if (self = [super init]) {
-        BOOL uaExists = [self directoryExistsAtPath:kUADirectory orOldPath:kUAOldDirectory];
-
-        if (!uaExists) {
-            [[NSFileManager defaultManager] createDirectoryAtPath:kUADirectory withIntermediateDirectories:YES attributes:nil error:nil];
-        }
-        
-        //Set up default download directory
-        if (![[NSFileManager defaultManager] fileExistsAtPath:kUADownloadDirectory]) {
-            [[NSFileManager defaultManager] createDirectoryAtPath:kUADownloadDirectory withIntermediateDirectories:YES attributes:nil error:nil];
-        }
-
         // In StoreFront, we set the cache policy to use cache if possible.
         // And currently we only use this download cache in UAAsyncImageView.
         [[UA_ASIDownloadCache sharedCache] setDefaultCachePolicy:UA_ASIAskServerIfModifiedWhenStaleCachePolicy|UA_ASIFallbackToCacheIfLoadFailsCachePolicy];
