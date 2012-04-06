@@ -52,9 +52,11 @@ NSString * const UAirshipTakeOffOptionsDefaultPasswordKey = @"UAirshipTakeOffOpt
 static UAirship *_sharedAirship;
 BOOL logging = false;
 
-@interface UAirship() {
+
+@interface UAirship() /*{
     UALocationService* locationService_;
 }
+ */
 // Update device token without remote registration
 // Private
 - (void)updateDeviceToken:(NSData *)token;

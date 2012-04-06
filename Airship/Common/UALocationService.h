@@ -79,6 +79,12 @@
     BOOL promptUserForLocationServices_;
     BOOL automaticLocationOnForegroundEnabled_;
     BOOL backroundLocationServiceEnabled_;
+@private
+    UAStandardLocationProvider *standardLocationProvider_;
+    UAStandardLocationProvider *singleLocationProvider_;   
+    UASignificantChangeProvider *significantChangeProvider_;
+    BOOL shouldStartReportingStandardLocation_;
+    BOOL shouldStartReportingSignificantChange_;
 }
 
 ///---------------------------------------------------------------------------------------

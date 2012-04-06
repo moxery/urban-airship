@@ -100,7 +100,7 @@ extern NSString * const UAirshipTakeOffOptionsDefaultPasswordKey;
     NSString *deviceToken;
     BOOL deviceTokenHasChanged;
     BOOL ready;
-    
+    UALocationService* locationService_;
 }
 
 /**
