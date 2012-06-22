@@ -414,7 +414,7 @@ didChangeAuthorizationStatus:(CLAuthorizationStatus)status {
 - (void)setCommonPropertiesOnProvider:(id <UALocationProviderProtocol>)locationProvider{
     locationProvider.delegate = self;
     if(self.purpose) {
-        locationProvider.purpose = self.purpose;
+        [locationProvider setPurpose:self.purpose];
     }
 }
 
