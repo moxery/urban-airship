@@ -89,7 +89,7 @@ extern NSString * const UAirshipTakeOffBackgroundThreadException;
 
     BOOL deviceTokenHasChanged;
     BOOL ready;
-    UALocationService* locationService_;
+    // UALocationService* locationService_;
 }
 
 /**

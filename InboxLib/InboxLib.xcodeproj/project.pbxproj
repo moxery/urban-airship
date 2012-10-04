@@ -28,11 +28,7 @@
 
 /* Begin PBXFileReference section */
 		AACBBE490F95108600F1A2B1 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
-<<<<<<< HEAD
-		D2AAC07E0554694100DB518D /* libInbox-2.1.0.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libInbox-2.1.0.a"; sourceTree = BUILT_PRODUCTS_DIR; };
-=======
 		D2AAC07E0554694100DB518D /* libInbox.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libInbox.a; sourceTree = BUILT_PRODUCTS_DIR; };
->>>>>>> 4e3896d39ffebf165512ada5bfa035ef547d195e
 		E9AED95912B7931500441700 /* UAInbox.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UAInbox.h; sourceTree = "<group>"; };
 		E9AED95A12B7931500441700 /* UAInbox.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UAInbox.m; sourceTree = "<group>"; };
 		E9AED95B12B7931500441700 /* UAInboxDBManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UAInboxDBManager.h; sourceTree = "<group>"; };
@@ -66,11 +62,7 @@
 		034768DFFF38A50411DB9C8B /* Products */ = {
 			isa = PBXGroup;
 			children = (
-<<<<<<< HEAD
-				D2AAC07E0554694100DB518D /* libInbox-2.1.0.a */,
-=======
 				D2AAC07E0554694100DB518D /* libInbox.a */,
->>>>>>> 4e3896d39ffebf165512ada5bfa035ef547d195e
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -161,11 +153,7 @@
 			);
 			name = InboxLib;
 			productName = InboxLib;
-<<<<<<< HEAD
-			productReference = D2AAC07E0554694100DB518D /* libInbox-2.1.0.a */;
-=======
 			productReference = D2AAC07E0554694100DB518D /* libInbox.a */;
->>>>>>> 4e3896d39ffebf165512ada5bfa035ef547d195e
 			productType = "com.apple.product-type.library.static";
 		};
 /* End PBXNativeTarget section */
@@ -227,7 +215,6 @@
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = InboxLib_Prefix.pch;
-				GCC_VERSION = com.apple.compilers.llvmgcc42;
 				INSTALL_PATH = /usr/local/lib;
 				IPHONEOS_DEPLOYMENT_TARGET = 4.0;
 				OTHER_CFLAGS = (
@@ -249,7 +236,6 @@
 				GCC_MODEL_TUNING = G5;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = InboxLib_Prefix.pch;
-				GCC_VERSION = com.apple.compilers.llvmgcc42;
 				INSTALL_PATH = /usr/local/lib;
 				IPHONEOS_DEPLOYMENT_TARGET = 4.0;
 				OTHER_CFLAGS = "-D_UA_VERSION=\\\"$(CURRENT_PROJECT_VERSION)\\\"";
@@ -265,7 +251,6 @@
 				CURRENT_PROJECT_VERSION = 2.1.5;
 				GCC_C_LANGUAGE_STANDARD = c99;
 				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = "../Airship/**";
@@ -292,7 +277,6 @@
 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
 				CURRENT_PROJECT_VERSION = 2.1.5;
 				GCC_C_LANGUAGE_STANDARD = c99;
-				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = "../Airship/**";

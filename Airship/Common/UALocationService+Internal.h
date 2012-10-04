@@ -29,12 +29,14 @@
 
 
 @class UALocationEvent;
-@interface UALocationService () /*{
+@interface UALocationService () {
+    /*
     UAStandardLocationProvider *standardLocationProvider_;
     UAStandardLocationProvider *singleLocationProvider_;   
     UASignificantChangeProvider *significantChangeProvider_;
     BOOL shouldStartReportingStandardLocation_;
     BOOL shouldStartReportingSignificantChange_;
+     */
     CLLocation *bestAvailableSingleLocation_;
     UIBackgroundTaskIdentifier singleLocationBackgroundIdentifier_;
 }
