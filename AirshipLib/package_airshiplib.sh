@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Copyright 2009-2011 Urban Airship Inc. All rights reserved.
+# Copyright 2009-2012 Urban Airship Inc. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -23,23 +23,12 @@
 # OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-if [ "true" == "${ALREADYINVOKED:-false}" ]
-then
-echo "RECURSION: Not the root invocation, don't recurse"
-else
-# Prevent recursion
-export ALREADYINVOKED="true"
-
-buildConfig="$CONFIGURATION"
-srcRoot="$SRCROOT"
+# TODO: make this configurable?
+buildConfig="Release"
+srcRoot=$(pwd)
 
 srcPath="${srcRoot}/../Airship"
 destPath="${srcRoot}/../${buildConfig}/Airship"
-
-if [ -z "$buildConfig" ]; then
-	echo "Error: This script is only meant to be run within AirshipLib build phase."
-	exit -1
-fi
 
 rm -rf "${destPath}"
 mkdir -p "${destPath}"
@@ -53,6 +42,10 @@ cd "${destPath}"
 
 find Library \! -name "*.h" -type f -delete
 find Common \! -name "*.h" -type f -delete
+
+#delete internal test headers
+rm -rf `find . -name "*+Internal.h" `
+
 find External \! '(' -name "UA_*.h" -o -name "UA_" ')' -type f -delete
 find External -type d -empty -delete
 rm -rf External/GHUnitIOS.framework
@@ -67,6 +60,17 @@ rm -rf Test
 #Remove the Appledoc documenation settings from the distribution
 rm AppledocSettings.plist
 
+rm *LibGcov.a
+
 find . -name "*.orig" -delete
 
-fi
+#copy LICENSE, README and CHANGELOG
+cp "${srcPath}/../CHANGELOG" "${destPath}"
+cp "${srcPath}/../README.rst" "${destPath}"
+cp "${srcPath}/../LICENSE" "${destPath}"
+
+#TODO: use actual paths instead of moving everywhere
+cd ..
+rm *.zip
+#TODO: pull out version number from xcodeproject and create both files. Also bundle samples.
+zip -r libUAirship-latest.zip Airship

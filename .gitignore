@@ -4,6 +4,8 @@
 *.mode1v3
 *.pbxuser
 *.perspective*
+distribution_binaries/
+distribution_package/
 docs/html/
 docs/docset/
 Debug/
@@ -14,6 +16,7 @@ Airship/*.a
 xcuserdata/
 *.xcworkspace/
 AirshipConfig.plist
+AirshipDevelopment.plist
 fabfile.py*
 *.build_output
 # Undo files for MacVim 

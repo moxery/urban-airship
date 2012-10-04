@@ -1,5 +1,5 @@
 /*
- Copyright 2009-2011 Urban Airship Inc. All rights reserved.
+ Copyright 2009-2012 Urban Airship Inc. All rights reserved.
  
  Redistribution and use in source and binary forms, with or without
  modification, are permitted provided that the following conditions are met:
@@ -11,7 +11,7 @@
  this list of conditions and the following disclaimer in the documentation
  and/or other materials provided withthe distribution.
  
- THIS SOFTWARE IS PROVIDED BY THE URBAN AIRSHIP INC ``AS IS'' AND ANY EXPRESS OR
+ THIS SOFTWARE IS PROVIDED BY THE URBAN AIRSHIP INC``AS IS'' AND ANY EXPRESS OR
  IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
  EVENT SHALL URBAN AIRSHIP INC OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
@@ -23,22 +23,14 @@
  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#import "UAInventory+Mocked.h"
-#import "UATestGlobal.h"
-
-@implementation UAInventory(Mocked)
-
-- (UAProduct*)get_expected_productWithIdentifier:(NSString*)productId {
-    NSDictionary *value = (NSDictionary *)[UATestGlobal shared].value;
-    return [[value objectForKey:@"products"] objectForKey:productId];
+@interface UAirship() {
+    UALocationService* locationService_;
 }
-
-- (void)do_nothing_hostReachStatusChanged:(NSNotification *)notification {
-    UALOG(@"Network reachability has changed.");
-}
-
-- (void)do_not_reload_inventory {
-    UALOG(@"Does not reload inventory.");
-}
+/*
+ * Should set this user agent up
+ * [LIB-101] User agent string should be:
+ * App 1.0 (iPad; iPhone OS <version>; UALib <version>; <app key>; en_US)
+ */
+- (void)configureUserAgent;
 
 @end
