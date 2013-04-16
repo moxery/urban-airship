@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash -ex
 
 # Copyright 2009-2012 Urban Airship Inc. All rights reserved.
 #
@@ -48,19 +48,11 @@ rm -rf `find . -name "*+Internal.h" `
 
 find External \! '(' -name "UA_*.h" -o -name "UA_" ')' -type f -delete
 find External -type d -empty -delete
-rm -rf External/GHUnitIOS.framework
-rm -rf External/asi-http-request
-rm -rf External/fmdb
-rm -rf External/json-framework
-rm -rf External/google-toolbox-for-mac
-rm -rf External/ZipFile-OC
 rm -rf TestSamples
 rm -rf Test
 
 #Remove the Appledoc documenation settings from the distribution
 rm AppledocSettings.plist
-
-rm *LibGcov.a
 
 find . -name "*.orig" -delete
 
@@ -71,6 +63,7 @@ cp "${srcPath}/../LICENSE" "${destPath}"
 
 #TODO: use actual paths instead of moving everywhere
 cd ..
-rm *.zip
+find . -name "libUAirship*.zip" -delete
+
 #TODO: pull out version number from xcodeproject and create both files. Also bundle samples.
 zip -r libUAirship-latest.zip Airship

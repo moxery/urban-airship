@@ -36,9 +36,10 @@
 		18C0295E124F216B00D49CD5 /* Default.png in Resources */ = {isa = PBXBuildFile; fileRef = 18C02952124F216B00D49CD5 /* Default.png */; };
 		18C02960124F216B00D49CD5 /* Icon-Small.png in Resources */ = {isa = PBXBuildFile; fileRef = 18C02954124F216B00D49CD5 /* Icon-Small.png */; };
 		18C02961124F216B00D49CD5 /* SampleViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 18C02955124F216B00D49CD5 /* SampleViewController.xib */; };
-		18C02A05124F244300D49CD5 /* libUAirship-1.3.2.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 18C02973124F21B800D49CD5 /* libUAirship-1.3.2.a */; };
 		1D60589F0D05DD5A006BFB54 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1D30AB110D05D00D00671497 /* Foundation.framework */; };
 		1DF5F4E00D08C38300B7A737 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1DF5F4DF0D08C38300B7A737 /* UIKit.framework */; };
+		1F3CC4A5165C2D4F008526E3 /* Default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F3CC4A4165C2D4F008526E3 /* Default-568h@2x.png */; };
+		1F42313B16C19A48004B52C1 /* libUAirship-1.3.7.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BBC923F515AC8F6000EE7C2A /* libUAirship-1.3.7.a */; };
 		1F6DA58712F9F61E00496A5C /* UAPushNotificationHandler.m in Sources */ = {isa = PBXBuildFile; fileRef = 1F6DA58612F9F61E00496A5C /* UAPushNotificationHandler.m */; };
 		1F6DA58912F9FEC800496A5C /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F6DA58812F9FEC800496A5C /* AudioToolbox.framework */; };
 		1F79711312DE3BFB00D4937F /* AirshipConfig.plist in Resources */ = {isa = PBXBuildFile; fileRef = 1F79711212DE3BFB00D4937F /* AirshipConfig.plist */; };
@@ -68,6 +69,7 @@
 		BB935D9E152B5E9C006E6A92 /* UALocationSettingsViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = BB935D9A152B5E9C006E6A92 /* UALocationSettingsViewController.m */; };
 		BB935D9F152B5E9C006E6A92 /* UAMapPresentationController.m in Sources */ = {isa = PBXBuildFile; fileRef = BB935D9C152B5E9C006E6A92 /* UAMapPresentationController.m */; };
 		BBAAD871151D263F00A090CD /* UAMapPresentationViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = BBAAD870151D263E00A090CD /* UAMapPresentationViewController.xib */; };
+		BBB879AF165D53AB00678A9A /* UAUserApplicationTest.m in Sources */ = {isa = PBXBuildFile; fileRef = BBB879AE165D53AB00678A9A /* UAUserApplicationTest.m */; };
 		BBCD16B3157827BF008FA05B /* UAPushApplicationTests.m in Sources */ = {isa = PBXBuildFile; fileRef = BBCD16B2157827BF008FA05B /* UAPushApplicationTests.m */; };
 		BBD52B831587E4CC00AE32FD /* JRSwizzle.m in Sources */ = {isa = PBXBuildFile; fileRef = BBD52B821587E4CC00AE32FD /* JRSwizzle.m */; };
 		BBDAEF1E1525264C007F7D92 /* UAirshipApplicationTests.m in Sources */ = {isa = PBXBuildFile; fileRef = BBDAEF1D1525264C007F7D92 /* UAirshipApplicationTests.m */; };
@@ -100,11 +102,11 @@
 			remoteGlobalIDString = D2AAC07E0554694100DB518D;
 			remoteInfo = AirshipLib;
 		};
-		18C029BB124F22F500D49CD5 /* PBXContainerItemProxy */ = {
+		1F42309816C08ADF004B52C1 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 18C02962124F21B800D49CD5 /* AirshipLib.xcodeproj */;
 			proxyType = 1;
-			remoteGlobalIDString = D2AAC07D0554694100DB518D;
+			remoteGlobalIDString = BB8860A7159A7E9600584445;
 			remoteInfo = AirshipLib;
 		};
 		7B909D3F142935C900D0AB36 /* PBXContainerItemProxy */ = {
@@ -174,6 +176,7 @@
 		1D30AB110D05D00D00671497 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		1D6058910D05DD3D006BFB54 /* PushSample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PushSample.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		1DF5F4DF0D08C38300B7A737 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
+		1F3CC4A4165C2D4F008526E3 /* Default-568h@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-568h@2x.png"; sourceTree = "<group>"; };
 		1F6DA58512F9F61E00496A5C /* UAPushNotificationHandler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UAPushNotificationHandler.h; sourceTree = "<group>"; };
 		1F6DA58612F9F61E00496A5C /* UAPushNotificationHandler.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UAPushNotificationHandler.m; sourceTree = "<group>"; };
 		1F6DA58812F9FEC800496A5C /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
@@ -209,6 +212,7 @@
 		BB935D9B152B5E9C006E6A92 /* UAMapPresentationController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UAMapPresentationController.h; sourceTree = "<group>"; };
 		BB935D9C152B5E9C006E6A92 /* UAMapPresentationController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UAMapPresentationController.m; sourceTree = "<group>"; };
 		BBAAD870151D263E00A090CD /* UAMapPresentationViewController.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = UAMapPresentationViewController.xib; sourceTree = "<group>"; };
+		BBB879AE165D53AB00678A9A /* UAUserApplicationTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UAUserApplicationTest.m; sourceTree = "<group>"; };
 		BBCD16B2157827BF008FA05B /* UAPushApplicationTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = UAPushApplicationTests.m; path = ../../AirshipLib/AirshipLogicTests/UAPushApplicationTests.m; sourceTree = "<group>"; };
 		BBD52B821587E4CC00AE32FD /* JRSwizzle.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = JRSwizzle.m; path = ../../AirshipLib/AirshipLogicTests/JRSwizzle.m; sourceTree = "<group>"; };
 		BBDAEF1D1525264C007F7D92 /* UAirshipApplicationTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UAirshipApplicationTests.m; sourceTree = "<group>"; };
@@ -241,6 +245,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1F42313B16C19A48004B52C1 /* libUAirship-1.3.7.a in Frameworks */,
 				BB75D9AD151BEAAC00F4241E /* MapKit.framework in Frameworks */,
 				BBEFB0111507F37200976645 /* CoreLocation.framework in Frameworks */,
 				1FF54B2313BD319500F8E5A1 /* libz.dylib in Frameworks */,
@@ -250,7 +255,6 @@
 				0D2E043C11AA5D1E00C4CD8A /* CFNetwork.framework in Frameworks */,
 				0D2E049A11AA5DB100C4CD8A /* MobileCoreServices.framework in Frameworks */,
 				0D2E04BE11AA5E9700C4CD8A /* SystemConfiguration.framework in Frameworks */,
-				18C02A05124F244300D49CD5 /* libUAirship-1.3.2.a in Frameworks */,
 				636CB1E9128CF51200481EFC /* libsqlite3.dylib in Frameworks */,
 				636CB1EC128CF51900481EFC /* StoreKit.framework in Frameworks */,
 				18A698BF129F679B00757214 /* Security.framework in Frameworks */,
@@ -441,6 +445,7 @@
 		18C0294E124F216B00D49CD5 /* iPhone */ = {
 			isa = PBXGroup;
 			children = (
+				1F3CC4A4165C2D4F008526E3 /* Default-568h@2x.png */,
 				D5A3F63412C15636009731BE /* Icon@2x.png */,
 				D5C75CBB12BC24210041239E /* Icon-Small@2x.png */,
 				18C02950124F216B00D49CD5 /* MainWindow_Phone.xib */,
@@ -468,8 +473,8 @@
 		18C02963124F21B800D49CD5 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				18C02973124F21B800D49CD5 /* libUAirship-1.3.2.a */,
-				BBC923F515AC8F6000EE7C2A /* libUAirshipPush-1.3.2.a */,
+				BBC923F515AC8F6000EE7C2A /* libUAirship-1.3.7.a */,
+				18C02973124F21B800D49CD5 /* libUAirshipFull-1.3.7.a */,
 				7B909D40142935C900D0AB36 /* AirshipLogicTests.octest */,
 			);
 			name = Products;
@@ -548,6 +553,7 @@
 				BBEFB02D1507F65700976645 /* UALocationServicesApplicationTest.m */,
 				BBDAEF1D1525264C007F7D92 /* UAirshipApplicationTests.m */,
 				BBEFB01D1507F3A400976645 /* Supporting Files */,
+				BBB879AE165D53AB00678A9A /* UAUserApplicationTest.m */,
 			);
 			path = AirshipApplicationTests;
 			sourceTree = "<group>";
@@ -575,12 +581,11 @@
 				1D60588E0D05DD3D006BFB54 /* Sources */,
 				1D60588F0D05DD3D006BFB54 /* Frameworks */,
 				0D2E053D11AA62C000C4CD8A /* ShellScript */,
-				1FF54B7413BD34B400F8E5A1 /* ShellScript */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				18C029BC124F22F500D49CD5 /* PBXTargetDependency */,
+				1F42309916C08ADF004B52C1 /* PBXTargetDependency */,
 			);
 			name = PushSample;
 			productName = PushLibSample;
@@ -595,6 +600,7 @@
 				BBEFB0131507F3A400976645 /* Frameworks */,
 				BBEFB0141507F3A400976645 /* Resources */,
 				BBEFB0151507F3A400976645 /* ShellScript */,
+				1FA9A6481684EB3D00258A01 /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -612,7 +618,7 @@
 		29B97313FDCFA39411CA2CEA /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0420;
+				LastUpgradeCheck = 0460;
 			};
 			buildConfigurationList = C01FCF4E08A954540054247B /* Build configuration list for PBXProject "PushSampleLib" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -642,10 +648,10 @@
 /* End PBXProject section */
 
 /* Begin PBXReferenceProxy section */
-		18C02973124F21B800D49CD5 /* libUAirship-1.3.2.a */ = {
+		18C02973124F21B800D49CD5 /* libUAirshipFull-1.3.7.a */ = {
 			isa = PBXReferenceProxy;
 			fileType = archive.ar;
-			path = "libUAirship-1.3.2.a";
+			path = "libUAirshipFull-1.3.7.a";
 			remoteRef = 18C02972124F21B800D49CD5 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
@@ -656,10 +662,10 @@
 			remoteRef = 7B909D3F142935C900D0AB36 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		BBC923F515AC8F6000EE7C2A /* libUAirshipPush-1.3.2.a */ = {
+		BBC923F515AC8F6000EE7C2A /* libUAirship-1.3.7.a */ = {
 			isa = PBXReferenceProxy;
 			fileType = archive.ar;
-			path = "libUAirshipPush-1.3.2.a";
+			path = "libUAirship-1.3.7.a";
 			remoteRef = BBC923F415AC8F6000EE7C2A /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
@@ -706,6 +712,7 @@
 				1F86D94F13007F790021ABF3 /* UAPushLocalization.bundle in Resources */,
 				BB75D9AF151BEB1600F4241E /* UALocationSettingsViewController.xib in Resources */,
 				BBAAD871151D263F00A090CD /* UAMapPresentationViewController.xib in Resources */,
+				1F3CC4A5165C2D4F008526E3 /* Default-568h@2x.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -735,7 +742,7 @@
 			shellPath = /bin/sh;
 			shellScript = "\"$SRCROOT/checkConfig.sh\"";
 		};
-		1FF54B7413BD34B400F8E5A1 /* ShellScript */ = {
+		1FA9A6481684EB3D00258A01 /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -745,8 +752,8 @@
 			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"$SRCROOT/../package_sample.sh\"";
+			shellPath = "/bin/bash -ex";
+			shellScript = "\"${SRCROOT}/../run_sim_app_tests.sh\"";
 		};
 		BBEFB0151507F3A400976645 /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -798,16 +805,17 @@
 				BBDAEF1E1525264C007F7D92 /* UAirshipApplicationTests.m in Sources */,
 				BBCD16B3157827BF008FA05B /* UAPushApplicationTests.m in Sources */,
 				BB484B2E15910C7E0097B38C /* UALocationTestUtils.m in Sources */,
+				BBB879AF165D53AB00678A9A /* UAUserApplicationTest.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		18C029BC124F22F500D49CD5 /* PBXTargetDependency */ = {
+		1F42309916C08ADF004B52C1 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			name = AirshipLib;
-			targetProxy = 18C029BB124F22F500D49CD5 /* PBXContainerItemProxy */;
+			targetProxy = 1F42309816C08ADF004B52C1 /* PBXContainerItemProxy */;
 		};
 		BBEFB02A1507F4AC00976645 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -862,7 +870,7 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				BUILD_STYLE = Release;
 				CODE_SIGN_ENTITLEMENTS = "";
-				CODE_SIGN_IDENTITY = "iPhone Distribution";
+				CODE_SIGN_IDENTITY = "iPhone Developer";
 				COPY_PHASE_STRIP = YES;
 				FRAMEWORK_SEARCH_PATHS = "";
 				GCC_GENERATE_TEST_COVERAGE_FILES = NO;
@@ -914,6 +922,7 @@
 					"\"$(SRCROOT)/../TestCommon/OCMockLibrary\"",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				TEST_AFTER_BUILD = NO;
 				TEST_HOST = "$(BUNDLE_LOADER)";
 				VALID_ARCHS = "armv6 armv7 i386 armv7s";
 				WRAPPER_EXTENSION = octest;
@@ -946,6 +955,7 @@
 					"\"$(SRCROOT)/../TestCommon/OCMockLibrary\"",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				TEST_AFTER_BUILD = NO;
 				TEST_HOST = "$(BUNDLE_LOADER)";
 				VALIDATE_PRODUCT = YES;
 				VALID_ARCHS = "armv6 armv7 i386 armv7s";
@@ -958,11 +968,16 @@
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
 				BUILD_STYLE = Debug;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				GCC_C_LANGUAGE_STANDARD = c99;
 				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = "../Airship/**";
 				IPHONEOS_DEPLOYMENT_TARGET = 4.0;
@@ -982,11 +997,16 @@
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
 				BUILD_STYLE = Release;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_IDENTITY = "iPhone Distribution";
 				"CODE_SIGN_IDENTITY[sdk=*]" = "iPhone Distribution";
 				GCC_C_LANGUAGE_STANDARD = c99;
 				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 4.0;
 				OTHER_CFLAGS = "-DNS_BLOCK_ASSERTIONS=1";

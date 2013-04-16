@@ -1,4 +1,57 @@
 -------------------------
+1.4.0 - Feb 7, 2012
+-------------------------
+- Removed all IAP/Subscriptions code from libUAirship-version.a. Applications using subscriptions
+  or in-app purchase must use libUAirshipFull-version.a. libUAirshipPush is no longer distributed
+  as libUAirship is taking its place.
+- Updated projects for Xcode 4.6 compatibility.
+- Added AppleHostedStoreFrontSample - a modified version of our StoreFront sample that uses
+  Apple's StoreKit download feature.
+- Removed original files for external dependencies
+- Updated the README with more documentation and a section on contributing code.
+- Added more explanatory comments to the sample app delegates.
+- The library no longer displays UIAlertViews with error messages - look for errors in the console log.
+- Added hooks for internal CI systems.
+
+-------------------------
+1.3.7 Nov 28, 2012
+-------------------------
+- fixed crash in UAAnalyticsDBManager that occured when adding events
+in a background task
+
+-------------------------
+1.3.6 Nov 28, 2012
+-------------------------
+- fixed crash on [UAirship land] associated with releasing key/value observers
+  in the wrong order
+- updated logging, added UALogLevel enum to set logging preferences in UAGlobal
+- changed device token handling in UAUser to fix issue with device tokens not
+  being updated properly
+- updated splash screens and GUI to support iPhone 5
+- started caching UA-ID to speed up analytics 
+
+-------------------------
+1.3.5 Nov 14, 2012
+-------------------------
+- fixed crash because of weak reference in UAPush to NSUserDefaults
+- fixed issue in UAPush when unregistering with a nil device token
+- added ability to set a default value for push in NSUserDefaults, previously
+  defaulted to yes
+- updated PushSample app to demonstrate new push functionality
+- updated README with new documentation
+
+-------------------------
+1.3.4 Oct 23, 2012
+-------------------------
+- fixed issue when displaying cached Rich Push messages with UTF8
+- fixed edge case where a location event could be discarded while waiting
+  for user to allow location based services
+- fixed analyzer issues in UAInboxURLCache, UAInboxOverlayController
+- library now disables analytics if no server is specified
+- moved deviceTokenHasChanged observation to UAUser
+- added queuing for analytics read/write access 
+
+-------------------------
 1.3.3 Sep 17, 2012
 -------------------------
 - Updated projects for iOS 6 and Xcode 4.5
@@ -7,6 +60,7 @@
 - Fixed registration error that occurred when a device unregistered,
   then re registered
 - Added delegate callback for the significant change location service
+
 -------------------------
 1.3.2 Aug 15, 2012
 -------------------------
@@ -32,15 +86,16 @@
 - Device metadata (tags,alias,quiet time) is now persisted before a successful
   registration update
 - Added auto retry for certain server responses in UAPush during registration
+
 --------------------------
 1.2.2 - June 18, 2012
 --------------------------
 - Fixed problem reporting hard push conversions in some situations
 - Updated UALocationService to shut down single location tasks in a timely
   manner when unrecoverable CLLocationManager errors occurred
-- Modfied UALocationService single location settings to prevent high accuracy
+- Modified UALocationService single location settings to prevent high accuracy
   location calls from constantly timing out in poor GPS conditions
-- Changed UALocationService delgate callbacks when the location service cannot
+- Changed UALocationService delegate callbacks when the location service cannot
   retrieve a location that meets accuracy requirements
 
 	
