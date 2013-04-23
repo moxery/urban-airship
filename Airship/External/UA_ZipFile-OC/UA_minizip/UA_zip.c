@@ -610,6 +610,7 @@ extern zipFile ZEXPORT UA_zipOpen2 (pathname, append, globalcomment, pzlib_filef
         if (err!=ZIP_OK)
         {
             ZCLOSE(ziinit.z_filefunc, ziinit.filestream);
+            TRYFREE(zi);
             return NULL;
         }
 
