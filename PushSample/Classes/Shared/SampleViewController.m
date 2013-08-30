@@ -1,5 +1,5 @@
 /*
- Copyright 2009-2012 Urban Airship Inc. All rights reserved.
+ Copyright 2009-2013 Urban Airship Inc. All rights reserved.
 
  Redistribution and use in source and binary forms, with or without
  modification, are permitted provided that the following conditions are met:
@@ -25,19 +25,17 @@
 
 #import "SampleViewController.h"
 #import "UAPush.h"
+#import "UAirship.h"
 #import "UAPushUI.h"
 
 
 @implementation SampleViewController
-@synthesize version;
-@synthesize settingsButton;
-@synthesize tokenButton;
 
 - (IBAction)buttonPressed:(id)sender {
-    if (sender == settingsButton) {
+    if (sender == self.settingsButton) {
         [UAPush openApnsSettings:self animated:YES];
-    } else if (sender == tokenButton) {
-        [UAPush openTokenSettings:self animated:YES];
+    } else if (sender == self.tokenButton) {
+        [UAPushUI openTokenSettings:self animated:YES];
     }
 }
 
@@ -47,12 +45,14 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    version.text = [NSString stringWithFormat:@"UAPush Version: %@", [UAPushVersion get]];
+    self.version.text = [NSString stringWithFormat:@"UAirship Version: %@", [UAirshipVersion get]];
     [UAPush useCustomUI:[UAPushUI class]];
 }
 
 - (void)dealloc {
-    [version release];
+    self.version = nil;
+    self.settingsButton = nil;
+    self.tokenButton = nil;
     [super dealloc];
 }
 

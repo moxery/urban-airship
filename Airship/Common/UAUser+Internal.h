@@ -1,5 +1,5 @@
 /*
- Copyright 2009-2012 Urban Airship Inc. All rights reserved.
+ Copyright 2009-2013 Urban Airship Inc. All rights reserved.
  
  Redistribution and use in source and binary forms, with or without
  modification, are permitted provided that the following conditions are met:
@@ -23,67 +23,36 @@
  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-// NSUserDefaultsKey for libUAirship verision >= v1.3.6
-// Changing the key forces devices to update with UA at least once
-// with new workflow. Previous key was "UAUserLastDeviceTokenKey", and
-// is no longer used. 
-#define kLastUpdatedDeviceTokenKey @"UAUserLastUpdatedDeviceTokenKey"
+#import "UAUser.h"
 
-//Legacy keys for migration from pre-keychain user store
-#define kLegacyInboxUserKey @"UAAirMailDefaultInboxUser"
-#define kLegacyInboxPassKey @"UAAirMailDefaultInboxPass"
-#define kLegacySubscriptionsUserKey @"UASubscriptionUserKey"
-#define kLegacySubscriptionsPassKey @"UASubscriptionPassKey"
-#define kLegacySubscriptionsEmailKey @"UASubscriptionEmail"
-
-//Legacy keys from Inbox
-#define kLegacyInboxAliasKey @"UAAirMailDefaultInboxAlias"
-#define kLegacyInboxTagsKey @"UAAirMailDefaultInboxTags"
-
-//Current dictionary keys
-
-#define kUserRecoveryKey @"UAUserRecoveryKey"
-#define kUserRecoveryStatusURL @"UAUserRecoveryStatusURL"
-#define kAlreadySentUserRecoveryEmail @"UAUserRecoveryKeySent"
-#define kRecoveryEmail @"UAUserRecoveryEmail"
-#define kTagsKey @"UAUserTagsKey"
-#define kAliasKey @"UAUserAliasKey"
+// Current dictionary keys
 #define kUserUrlKey @"UAUserUrlKey"
 
-@interface UAUser()
+@class UAHTTPRequest;
+@class UAUserAPIClient;
 
+@interface UAUser()
 
 // This device token represents the device token that is assigned to
 // a user and is represented on the UA Servers. It may or may not be in sync
 // with the device token on the UAPush object, which represents the token currently
 // on the device.
 
-// The current device token, stored in NSUserDefaults
-- (NSString*)serverDeviceToken;
-
-// Sets a new device token in NSUserDefaults. This has the side effect of lowercasing the string
-// since strings returned from the server are upper case. 
-- (void)setServerDeviceToken:(NSString*)token;
-
-// Compares the currently persisted device token, which representes what is
-// on the UA servers to the token associated with UAPush, which represents
-// the token on device
-- (BOOL)deviceTokenHasChanged;
-
-// Migrate user from user defaults to keychain
-- (void)migrateUser;
-
 //Device Token Change Listener
 - (void)listenForDeviceTokenReg;
 - (void)cancelListeningForDeviceToken;
 - (void)updateDefaultDeviceToken;
 
-//User retrieval
-- (void)retrieveRequestSucceeded:(UA_ASIHTTPRequest*)request;
-- (void)retrieveRequestFailed:(UA_ASIHTTPRequest*)request;
+@property(nonatomic, retain) UAUserAPIClient *apiClient;
+@property(nonatomic, assign) BOOL initialized;
+@property(nonatomic, copy) NSString *username;
+@property(nonatomic, copy) NSString *password;
+@property(nonatomic, copy) NSString *url;
+@property(nonatomic, assign) BOOL isObservingDeviceToken;
+@property(nonatomic, copy) NSString *appKey;
 
-//User creation
-- (void)userCreationDidFail:(UA_ASIHTTPRequest *)request;
+//creation flag
+@property(nonatomic, assign) BOOL creatingUser;
 
 @end
 

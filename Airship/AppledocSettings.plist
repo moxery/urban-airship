@@ -10,6 +10,8 @@
 		<string>External</string>
 		<string>Test</string>
 		<string>TestSamples</string>
+		<string>UI</string>
+		<string>*+Internal.h</string>
 	</array>
 	<key>--project-company</key>
 	<string>Urban Airship</string>
@@ -31,7 +33,5 @@
 	<integer>3</integer>
 	<key>--logformat</key>
 	<integer>1</integer>
-    <key>--templates</key>
-    <string>../docs/doc_templates</string>
 </dict>
 </plist>

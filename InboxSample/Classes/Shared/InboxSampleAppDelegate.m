@@ -1,5 +1,5 @@
 /*
- Copyright 2009-2012 Urban Airship Inc. All rights reserved.
+ Copyright 2009-2013 Urban Airship Inc. All rights reserved.
 
  Redistribution and use in source and binary forms, with or without
  modification, are permitted provided that the following conditions are met:
@@ -35,19 +35,16 @@
 #import "UAInbox.h"
 #import "UAInboxMessageList.h"
 
+@interface InboxSampleAppDelegate()
+@property (nonatomic, retain) UAInboxDefaultJSDelegate *jsDelegate;
+@end
 
 @implementation InboxSampleAppDelegate
 
-@synthesize window;
-@synthesize viewController;
-@synthesize navigationController;
-
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
-    
-    self.navigationController = [[[UINavigationController alloc] init] autorelease];
-    [navigationController pushViewController:viewController animated:NO];
-    [window addSubview:navigationController.view];
-    [window makeKeyAndVisible];
+
+    [self.window setRootViewController:self.navigationController];
+    [self.window makeKeyAndVisible];
 
     // Display a UIAlertView warning developers that push notifications do not work in the simulator
     // You should remove this in your app.
@@ -55,26 +52,11 @@
     
     //[UAInbox useCustomUI: [UAInboxNavUI class]];
     
-    //Create Airship options dictionary and add the required UIApplication launchOptions
-    NSMutableDictionary *takeOffOptions = [NSMutableDictionary dictionary];
-    [takeOffOptions setValue:launchOptions forKey:UAirshipTakeOffOptionsLaunchOptionsKey];
-    
-    // To use your own pre-existing inbox credentials, uncomment and modify these lines:
-    // [takeOffOptions setValue:@"TheExistingUsername" forKey:UAAirshipTakeOffOptionsDefaultUsername];
-    // [takeOffOptions setValue:@"TheExistingPassword" forKey:UAAirshipTakeOffOptionsDefaultPassword];
-    
-    // Call takeOff (which creates the UAirship singleton), passing in the launch options so the
-    // library can properly record when the app is launched from a push notification. This call is
+    // Call takeOff (which creates the UAirship singleton). This call is
     // required.
     //
     // Populate AirshipConfig.plist with your app's info from https://go.urbanairship.com
-    [UAirship takeOff:takeOffOptions];
-    
-    // Register for remote notfications with the UA Library. The library will register with
-    // iOS if push is enabled on UAPush.
-    [[UAPush shared] registerForRemoteNotificationTypes:(UIRemoteNotificationTypeBadge |
-                                                         UIRemoteNotificationTypeSound |
-                                                         UIRemoteNotificationTypeAlert)];
+    [UAirship takeOff];
 
     // Configure Inbox behaviour before UAInboxPushHandler since it may need it
     // when launching from notification
@@ -82,68 +64,36 @@
     [UAInbox shared].pushHandler.delegate = [UAInboxUI shared];
 
     // Optional: Delegate for JavaScript callback
-    jsDelegate = [[UAInboxDefaultJSDelegate alloc] init];
-    [UAInbox shared].jsDelegate = jsDelegate;
+    self.jsDelegate = [[[UAInboxDefaultJSDelegate alloc] init] autorelease];
+    [UAInbox shared].jsDelegate = self.jsDelegate;
     
     // For modal UI:
-    [UAInboxUI shared].inboxParentController = navigationController;
+    [UAInboxUI shared].inboxParentController = self.navigationController;
     [UAInboxUI shared].useOverlay = YES;
     
     // For Navigation UI:
-    [UAInboxNavUI shared].inboxParentController = navigationController;
+    [UAInboxNavUI shared].inboxParentController = self.navigationController;
     [UAInboxNavUI shared].useOverlay = YES;
     [UAInboxNavUI shared].popoverSize = CGSizeMake(600, 1100);
     
-    
-    //TODO: think about clean up / dealloc for multiple UI classes
-    
-    [UAInboxPushHandler handleLaunchOptions:launchOptions];
-	
-    // Handle an incoming Rich Push message
-	if ([[UAInbox shared].pushHandler hasLaunchMessage]) {
-		[[[UAInbox shared] uiClass] loadLaunchMessage];
-	}
-
     // Return value is ignored for push notifications, so it's safer to return
     // NO by default for other resources
     return NO;
-}
-
-- (void)application:(UIApplication *)application didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken {
-    UA_LINFO(@"APNS device token: %@", deviceToken);
-    
-    // Updates the device token and registers the token with UA. This call is required.
-    [[UAPush shared] registerDeviceToken:deviceToken];
-}
-
-- (void)application:(UIApplication *)application didFailToRegisterForRemoteNotificationsWithError:(NSError *) error {
-    UA_LERR(@"did Fail To Register For Remote Notifications With Error: %@", error);
-}
-
-
-- (void)application:(UIApplication *)application didReceiveRemoteNotification:(NSDictionary *)userInfo {
-    
-    // Send the alert to UA so that it can be handled and tracked as a direct response. This call
-    // is required.
-    [UAInboxPushHandler handleNotification:userInfo];
-}
-
-- (void)applicationWillTerminate:(UIApplication *)application {
-    // Tear down UA services
-    [UAirship land];
 }
 
 - (void)applicationWillResignActive:(UIApplication *)application {
     
     // Set the application's badge to the number of unread messages
     UAInbox *inbox = [UAInbox shared];
-    if (inbox && inbox.messageList && inbox.messageList.unreadCount >= 0) {
+    if (inbox.messageList.unreadCount >= 0) {
         [[UIApplication sharedApplication] setApplicationIconBadgeNumber:inbox.messageList.unreadCount];
     }
 }
 
 - (void)dealloc {
-    RELEASE_SAFELY(jsDelegate);
+    [UAInbox shared].jsDelegate = nil;
+    
+    self.jsDelegate = nil;
     self.viewController = nil;
     self.navigationController = nil;
     self.window = nil;
@@ -154,7 +104,7 @@
 - (void)failIfSimulator {
     if ([[[UIDevice currentDevice] model] rangeOfString:@"Simulator"].location != NSNotFound) {
         UIAlertView *someError = [[UIAlertView alloc] initWithTitle:@"Notice"
-                                                            message:@"You can see UAInbox in the simulator, but you will not be able to recieve push notifications"
+                                                            message:@"You can see UAInbox in the simulator, but you will not be able to recieve push notifications."
                                                            delegate:self
                                                   cancelButtonTitle:@"OK"
                                                   otherButtonTitles:nil];

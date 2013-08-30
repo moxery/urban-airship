@@ -1,5 +1,5 @@
 /*
- Copyright 2009-2012 Urban Airship Inc. All rights reserved.
+ Copyright 2009-2013 Urban Airship Inc. All rights reserved.
 
  Redistribution and use in source and binary forms, with or without
  modification, are permitted provided that the following conditions are met:
@@ -36,10 +36,8 @@
 
 @implementation InboxSampleViewController
 
-@synthesize version;
-
 - (IBAction)mail:(id)sender {
-    [UAInbox displayInbox:self.navigationController animated:YES];   
+    [UAInbox displayInboxInViewController:self.navigationController animated:YES];
 }
 
 - (IBAction)selectInboxStyle:(id)sender {
@@ -79,7 +77,7 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    self.version.text = [NSString stringWithFormat:@"UAInbox Version: %@", [UAInboxVersion get]];
+    self.version.text = [NSString stringWithFormat:@"UAInbox Version: %@", [UAirshipVersion get]];
     
     self.navigationItem.rightBarButtonItem 
         = [[[UIBarButtonItem alloc] initWithTitle:@"Inbox" style:UIBarButtonItemStylePlain target:self action:@selector(mail:)] autorelease];
@@ -98,7 +96,7 @@
 }
 
 - (void)dealloc {
-    RELEASE_SAFELY(version);
+    self.version = nil;
     [super dealloc];
 }
 

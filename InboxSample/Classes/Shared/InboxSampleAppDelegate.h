@@ -1,5 +1,5 @@
 /*
- Copyright 2009-2012 Urban Airship Inc. All rights reserved.
+ Copyright 2009-2013 Urban Airship Inc. All rights reserved.
 
  Redistribution and use in source and binary forms, with or without
  modification, are permitted provided that the following conditions are met:
@@ -27,16 +27,11 @@
 @class InboxSampleViewController;
 @class UAInboxDefaultJSDelegate;
 
-@interface InboxSampleAppDelegate : NSObject <UIApplicationDelegate> {
-    UIWindow *window;
-    InboxSampleViewController *viewController;
-    UINavigationController *navigationController;
-    UAInboxDefaultJSDelegate *jsDelegate;
-}
+@interface InboxSampleAppDelegate : NSObject <UIApplicationDelegate> 
 
 @property (nonatomic, retain) IBOutlet UIWindow *window;
 @property (nonatomic, retain) IBOutlet InboxSampleViewController *viewController;
-@property (nonatomic, retain) UINavigationController *navigationController;
+@property (nonatomic, retain) IBOutlet UINavigationController *navigationController;
 
 - (void)failIfSimulator;
 

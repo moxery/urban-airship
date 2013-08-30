@@ -1,5 +1,5 @@
 /*
- Copyright 2009-2012 Urban Airship Inc. All rights reserved.
+ Copyright 2009-2013 Urban Airship Inc. All rights reserved.
  
  Redistribution and use in source and binary forms, with or without
  modification, are permitted provided that the following conditions are met:
@@ -26,12 +26,13 @@
 #import <OCMock/OCMock.h>
 #import <OCMock/OCMConstraint.h>
 #import <SenTestingKit/SenTestingKit.h>
-#import "UAAnalytics.h"
+
+#import "UAConfig.h"
 #import "UAAnalyticsDBManager.h"
 #import "UAEvent.h"
 #import "UALocationEvent.h"
 #import "UAAnalytics+Internal.h"
-#import "UAirship.h"
+#import "UAirship+Internal.h"
 #import "UALocationTestUtils.h"
 
 /* This class involves lots of async calls to the web
@@ -50,11 +51,13 @@
 
 
 - (void)setUp {
-    analytics = [[UAAnalytics alloc] initWithOptions:nil];
+    UAConfig *config = [[[UAConfig alloc] init] autorelease];
+    analytics = [[UAAnalytics alloc] initWithConfig:config];
+
+    [UAirship shared].analytics = analytics;
 }
 
 - (void)tearDown {
-    [analytics invalidate];
     RELEASE(analytics);
 }
 
@@ -76,7 +79,7 @@
         [invocation getArgument:&arg atIndex:2];
     };
     [[[mockAnalytics stub] andDo:getSingleArg] addEvent:OCMOCK_ANY];
-    [analytics handleNotification:[NSDictionary dictionaryWithObject:@"stuff" forKey:@"key"]];
+    [analytics handleNotification:[NSDictionary dictionaryWithObject:@"stuff" forKey:@"key"] inApplicationState:UIApplicationStateActive];
     STAssertNotNil(arg, nil);
     STAssertTrue([arg isKindOfClass:[UAEventPushReceived class]], nil);    
 }
@@ -90,7 +93,6 @@
 - (void)testEnterForeground {
     id mockAnalytics = [OCMockObject partialMockForObject:analytics];
     [[mockAnalytics expect] invalidateBackgroundTask];
-    [[mockAnalytics expect] setupSendTimer:X_UA_MIN_BATCH_INTERVAL];
     
     //set up event capture
     __block id arg = nil;
@@ -193,7 +195,7 @@
     
     //mock a notification - the "_" id is all that matters - we don't need an aps payload
     //this value is passed in through the app delegate's didReceiveRemoteNotification method
-    [[UAirship shared].analytics handleNotification:[NSDictionary dictionaryWithObject:incomingPushId forKey:@"_"]];
+    [[UAirship shared].analytics handleNotification:[NSDictionary dictionaryWithObject:incomingPushId forKey:@"_"] inApplicationState:UIApplicationStateInactive];
     
     //now the app is active, according to NSNotificationCenter
     [[UAirship shared].analytics didBecomeActive];
@@ -220,7 +222,6 @@
     [analytics enterBackground];
     STAssertTrue([arg isKindOfClass:[UAEventAppBackground class]], @"Enter background should fire UAEventAppBackground");
     STAssertTrue(analytics.sendBackgroundTask != UIBackgroundTaskInvalid, @"A background task should exist");
-    STAssertFalse([analytics.sendTimer isValid], @"sendTimer should be invalid");
     [mockAnalytics verify];
 }
 
@@ -263,33 +264,6 @@
     STAssertTrue([arg isKindOfClass:[UAEventAppInactive class]], @"willResignActive should fire UAEventAppInactive");
 }
 
-- (void)testRestoreFromDefault {
-    analytics.x_ua_max_batch = 0;
-    analytics.x_ua_max_total = 0;
-    analytics.x_ua_max_wait = 0;
-    analytics.x_ua_min_batch_interval = 0;
-    [analytics restoreFromDefault];
-    NSDictionary *defaults = [[NSUserDefaults standardUserDefaults] dictionaryRepresentation];
-    STAssertTrue(analytics.x_ua_max_total == [[defaults valueForKey:@"X-UA-Max-Total"] intValue], nil);
-    STAssertTrue(analytics.x_ua_max_batch == [[defaults valueForKey:@"X-UA-Max-Batch"] intValue], nil);
-    STAssertTrue(analytics.x_ua_max_wait == [[defaults valueForKey:@"X-UA-Max-Wait"] intValue], nil);
-    STAssertTrue(analytics.x_ua_min_batch_interval == [[defaults valueForKey:@"X-UA-Min-Batch-Interval"] intValue], nil);
-}
-
-- (void)testSaveDefault  {
-    analytics.x_ua_max_batch = 7;
-    analytics.x_ua_max_total = 7;
-    analytics.x_ua_max_wait = 7;
-    analytics.x_ua_min_batch_interval = 7; 
-    [analytics saveDefault];
-    NSDictionary *defaults = [[NSUserDefaults standardUserDefaults] dictionaryRepresentation];
-    STAssertTrue([[defaults valueForKey:@"X-UA-Max-Total"] intValue] == 7, nil);
-    STAssertTrue([[defaults valueForKey:@"X-UA-Max-Batch"] intValue] == 7, nil);
-    STAssertTrue([[defaults valueForKey:@"X-UA-Max-Wait"] intValue] == 7, nil);
-    STAssertTrue([[defaults valueForKey:@"X-UA-Min-Batch-Interval"] intValue] == 7, nil);
-
-}
-
 - (void)testAddEvent {
     // Should add an event in the foreground
     UAEventAppActive *event = [[[UAEventAppActive alloc] init] autorelease];
@@ -298,7 +272,7 @@
     analytics.oldestEventTime = 0;
     [analytics addEvent:event];
     [mockDBManager verify];
-    //
+
     // Should not send an event in the background when not location event
     STAssertTrue(analytics.oldestEventTime == [event.time doubleValue], nil);
     [[mockDBManager expect] addEvent:event withSession:analytics.session];
@@ -310,7 +284,7 @@
     [[mockAnalytics reject] send];
     [analytics addEvent:event];
     [mockAnalytics verify];
-    //
+
     // Should send a location event in the background
     mockAnalytics = [OCMockObject partialMockForObject:analytics];
     UALocationEvent *locationEvent = [[[UALocationEvent alloc] initWithLocationContext:nil] autorelease];
@@ -320,81 +294,10 @@
     [mockAnalytics verify];
 }
 
-- (void)testRequestDidSucceed {
-    id mockDBManager = [OCMockObject partialMockForObject:[UAAnalyticsDBManager shared]];
-    id mockRequest = [OCMockObject niceMockForClass:[UAHTTPRequest class]];
-    NSArray *info = [NSArray arrayWithObject:@"one"];
-    [[[mockRequest stub] andReturn:info] userInfo];
-    id mockResponse = [OCMockObject niceMockForClass:[NSHTTPURLResponse class]];
-    NSInteger code = 200;
-    [[[mockResponse stub] andReturnValue:OCMOCK_VALUE(code)] statusCode];
-    id mockAnalytics = [OCMockObject partialMockForObject:analytics];
-    [[mockAnalytics expect] updateAnalyticsParametersWithHeaderValues:mockResponse];
-    [[mockAnalytics expect] resetEventsDatabaseStatus];
-    [[mockAnalytics expect] invalidateBackgroundTask];
-    [[mockDBManager expect] deleteEvents:info];
-    [analytics requestDidSucceed:mockRequest response:mockResponse responseData:nil];
-    [mockAnalytics verify];
-    [mockDBManager verify];
-    [mockResponse verify];
-    [mockRequest verify];
-    STAssertEqualsWithAccuracy([[NSDate date] timeIntervalSinceDate:analytics.lastSendTime], (NSTimeInterval)0, 2, nil);
-}
-
-- (void)testUpdateAnalyticsParameters {
-    NSMutableDictionary *headers = [NSMutableDictionary dictionaryWithCapacity:4];
-    // Hit all the if statements that prevent values from changing
-    [headers setValue:[NSNumber numberWithInt:X_UA_MAX_TOTAL + 1] forKey:@"X-Ua-Max-Total"];
-    [headers setValue:[NSNumber numberWithInt:X_UA_MAX_BATCH + 1] forKey:@"X-Ua-Max-Batch"];
-    [headers setValue:[NSNumber numberWithInt:X_UA_MAX_WAIT + 1] forKey:@"X-Ua-Max-Wait"];
-    [headers setValue:[NSNumber numberWithInt:X_UA_MIN_BATCH_INTERVAL - 1] forKey:@"X-Ua-Min-Batch-Interval"];
-    id mockResponse = [OCMockObject niceMockForClass:[NSHTTPURLResponse class]];
-    id mockAnalytics = [OCMockObject partialMockForObject:analytics];
-    [[mockAnalytics expect] saveDefault];
-    [[[mockResponse stub] andReturn:headers] allHeaderFields];
-    [analytics updateAnalyticsParametersWithHeaderValues:mockResponse];
-    STAssertEquals(analytics.x_ua_max_total, X_UA_MAX_TOTAL, nil);
-    STAssertEquals(analytics.x_ua_max_batch, X_UA_MAX_BATCH, nil);
-    STAssertEquals(analytics.x_ua_max_wait, X_UA_MAX_WAIT, nil);
-    STAssertEquals(analytics.x_ua_min_batch_interval, X_UA_MIN_BATCH_INTERVAL, nil);
-    [mockAnalytics verify];
-    // end the ifs
-    // hit all the elses
-    headers = [NSMutableDictionary dictionaryWithCapacity:4];
-    [headers setValue:[NSNumber numberWithInt:5] forKey:@"X-Ua-Max-Total"];
-    [headers setValue:[NSNumber numberWithInt:5] forKey:@"X-Ua-Max-Batch"];
-    [headers setValue:[NSNumber numberWithInt:X_UA_MAX_WAIT - 1] forKey:@"X-Ua-Max-Wait"];
-    [headers setValue:[NSNumber numberWithInt:X_UA_MIN_BATCH_INTERVAL + 1] forKey:@"X-Ua-Min-Batch-Interval"];
-    mockResponse = [OCMockObject niceMockForClass:[NSHTTPURLResponse class]];
-    mockAnalytics = [OCMockObject partialMockForObject:analytics];
-    [[mockAnalytics expect] saveDefault];
-    [[[mockResponse stub] andReturn:headers] allHeaderFields];
-    [analytics updateAnalyticsParametersWithHeaderValues:mockResponse];
-    // There is some math here, account for these in the test
-    STAssertEquals(analytics.x_ua_max_total, 5 * 1024, nil);
-    STAssertEquals(analytics.x_ua_max_batch, 5 * 1024, nil);
-    //
-    STAssertEquals(analytics.x_ua_max_wait, X_UA_MAX_WAIT - 1, nil);
-    STAssertEquals(analytics.x_ua_min_batch_interval, X_UA_MIN_BATCH_INTERVAL + 1, nil);
-}
-
-- (void)testRequestDidFail {
-    id mockRequest = [OCMockObject niceMockForClass:[UAHTTPRequest class]];
-    id mockAnalytics = [OCMockObject partialMockForObject:analytics];
-    [[mockAnalytics expect] invalidateBackgroundTask];
-    analytics.connection = [UAHTTPConnection connectionWithRequest:mockRequest];
-    [analytics requestDidFail:mockRequest];
-    [mockAnalytics verify];
-    STAssertNil(analytics.connection, nil);
-}
-
 - (void)testShouldSendAnalyticsCore {
-    analytics.server = nil;
+    analytics.config.analyticsEnabled = NO;
     STAssertFalse([analytics shouldSendAnalytics], nil);
-    analytics.server = @"cats";
-    analytics.connection = [UAHTTPConnection connectionWithRequest:nil];
-    STAssertFalse([analytics shouldSendAnalytics], nil);
-    analytics.connection = nil;
+    analytics.config.analyticsEnabled = YES;
     id mockDBManger = [OCMockObject partialMockForObject:[UAAnalyticsDBManager shared]];
     NSInteger zero = 0;
     [[[mockDBManger stub] andReturnValue:OCMOCK_VALUE(zero)] eventCount];
@@ -407,8 +310,7 @@
 }
 
 - (void)testShouldSendAnalyticsBackgroundLogic {
-    analytics.server = @"cats";
-    analytics.connection = nil;
+    analytics.config.analyticsURL = @"cats";
     id mockDBManger = [OCMockObject partialMockForObject:[UAAnalyticsDBManager shared]];
     mockDBManger = [OCMockObject partialMockForObject:[UAAnalyticsDBManager shared]];
     NSInteger five = 5;
@@ -430,30 +332,16 @@
 }
 
 - (void)testSend {
-    __block id arg = nil;
-    void (^getSingleArg)(NSInvocation*) = ^(NSInvocation *invocation){
-        [invocation getArgument:&arg atIndex:2];
-    };
     id mockAnalytics = [OCMockObject partialMockForObject:analytics];
-    id mockConnection = [OCMockObject niceMockForClass:[UAHTTPConnection class]];
-    analytics.connection = mockConnection;
-    // Intercept setConnection to prevent the mock that was just setup from being 
-    // replaced during execution of the send method
-    [[mockAnalytics stub] setConnection:OCMOCK_ANY];
-    [[mockConnection expect] setDelegate:analytics];
-    // Casting this object prevents a compiler warning
-    [(UAHTTPConnection*)[mockConnection expect] start];
+    id mockQueue = [OCMockObject niceMockForClass:[NSOperationQueue class]];
+    analytics.queue = mockQueue;
+    [[mockQueue expect] addOperation:[OCMArg any]];
     BOOL yes = YES;
     [[[mockAnalytics stub] andReturnValue:OCMOCK_VALUE(yes)] shouldSendAnalytics];
-    UAHTTPRequest *request = [analytics analyticsRequest];
-    id mockRequest = [OCMockObject partialMockForObject:request];
-    [[[mockRequest stub] andDo:getSingleArg] setUserInfo:OCMOCK_ANY];
-    [[[mockAnalytics stub] andReturn:request] analyticsRequest];
     NSArray* data = [NSArray arrayWithObjects:@"one", @"two", nil];
     [[[mockAnalytics stub] andReturn:data] prepareEventsForUpload];
     [analytics send];
-    [mockConnection verify];
-    STAssertEqualObjects(arg, data, @"UAAnalytics send method not populating request userInfo object with correct data");
+    [mockQueue verify];
 }
 
 // This test is not comprehensive for this method, as the method needs refactoring.
@@ -463,24 +351,12 @@
     STAssertNotNil(appEvent, nil);
     // Remember, the NSUserPreferences are in an unknown state in every test, so reset
     // preferences if the methods under test rely on them
-    analytics.x_ua_max_total = X_UA_MAX_TOTAL;
-    analytics.x_ua_max_batch = X_UA_MAX_BATCH;
+    analytics.maxTotalDBSize = kMaxTotalDBSizeBytes;
+    analytics.maxBatchSize = kMaxBatchSizeBytes;
     [analytics addEvent:appEvent];
     NSArray* events = [analytics prepareEventsForUpload];
     STAssertTrue([events isKindOfClass:[NSArray class]], nil);
     STAssertTrue([events count] > 0, nil);
-}
-
-- (void)testSetSendInterval {
-    STAssertEquals(UAAnalyticsFirstBatchUploadInterval, (int)analytics.sendTimer.timeInterval, nil);
-    STAssertTrue([analytics.sendTimer isValid], nil);
-    int newVal = 42;
-    analytics.x_ua_min_batch_interval = 5;
-    analytics.x_ua_max_wait = 50;
-    analytics.sendInterval = newVal;
-    STAssertTrue([analytics.sendTimer isValid], nil);
-    STAssertEquals(42, (int)analytics.sendTimer.timeInterval, nil);
-    STAssertEquals(42, analytics.sendInterval, nil);
 }
 
 - (void)testAnalyticsIsThreadSafe {

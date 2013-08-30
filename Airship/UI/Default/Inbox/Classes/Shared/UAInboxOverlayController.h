@@ -1,5 +1,5 @@
 /*
- Copyright 2009-2012 Urban Airship Inc. All rights reserved.
+ Copyright 2009-2013 Urban Airship Inc. All rights reserved.
  
  Redistribution and use in source and binary forms, with or without
  modification, are permitted provided that the following conditions are met:
@@ -48,6 +48,7 @@
 #import <Foundation/Foundation.h>
 #import "UAInboxMessage.h"
 #import "UABeveledLoadingIndicator.h"
+#import "UIWebView+UAAdditions.h"
 
 /**
  * This class provides an overlay window that can be popped over
@@ -57,16 +58,6 @@
  * without requiring navigation to the inbox.
  */
 @interface UAInboxOverlayController : NSObject <UIWebViewDelegate>
-
-{
-    
-    UIViewController *parentViewController;
-    UIView *bgView;
-    UIView *bigPanelView;
-    UABeveledLoadingIndicator *loadingIndicator;
-    UIWebView *webView;
-    UAInboxMessage *message;
-}
 
 /**
  * The UIWebView used to display the message content.

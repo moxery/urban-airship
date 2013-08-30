@@ -1,5 +1,5 @@
 /*
- Copyright 2009-2012 Urban Airship Inc. All rights reserved.
+ Copyright 2009-2013 Urban Airship Inc. All rights reserved.
  
  Redistribution and use in source and binary forms, with or without
  modification, are permitted provided that the following conditions are met:
@@ -24,6 +24,8 @@
  */
 #import <OCMock/OCMock.h>
 #import <OCMock/OCMConstraint.h>
+#import <SenTestingKit/SenTestingKit.h>
+
 #import "UAirship.h"
 #import "UALocationEvent.h"
 #import "UAAnalytics.h"
@@ -34,7 +36,8 @@
 #import "UASignificantChangeProvider.h"
 #import "UALocationTestUtils.h"
 #import "JRSwizzle.h"
-#import <SenTestingKit/SenTestingKit.h>
+#import "CLLocationManager+Test.h"
+
 
 // This needs to be kept in sync with the value in UAirship
 
