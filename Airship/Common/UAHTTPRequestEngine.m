@@ -5,7 +5,7 @@
 #import "UAGlobal.h"
 
 @interface UAHTTPRequestEngine()
-@property(nonatomic, retain) NSOperationQueue *queue;
+@property(nonatomic, strong) NSOperationQueue *queue;
 @end
 
 @implementation UAHTTPRequestEngine
@@ -23,7 +23,7 @@
 }
 
 - (id)init {
-    return [self initWithQueue:[[[NSOperationQueue alloc] init] autorelease]];
+    return [self initWithQueue:[[NSOperationQueue alloc] init]];
 }
 
 //Multiply the current delay interval by the backoff factor, clipped at the max value
@@ -51,7 +51,7 @@
 
     //Called in a retry condition.
     void (^retry)(UAHTTPRequest *request) = ^(UAHTTPRequest *request) {
-        UA_LDEBUG(@"Retrying connection to %@ in %d seconds", request.url.description, delay);
+        UA_LDEBUG(@"Retrying connection to %@ in %lu seconds", request.url.description, (unsigned long)delay);
 
         [self sleepForSeconds:delay withContinuation:
             [self operationWithRequest:theRequest
@@ -73,10 +73,6 @@
             }
         } else {
             UA_LERR(@"missing retryWhereBlock");
-        }
-
-        if (request.error) {
-            shouldRetry = YES;
         }
 
         if (shouldRetry) {
@@ -159,8 +155,6 @@
 
 - (void)dealloc {
     [self.queue cancelAllOperations];
-    self.queue = nil;
-    [super dealloc];
 }
 
 @end

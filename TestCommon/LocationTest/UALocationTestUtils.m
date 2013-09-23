@@ -22,27 +22,36 @@
  OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
 #import "UALocationTestUtils.h"
 
 @implementation UALocationTestUtils
 
-+ (CLLocation*)testLocationPDX {
++ (CLLocation *)testLocationPDX {
     CLLocationCoordinate2D coord = CLLocationCoordinate2DMake(kTestLatPDX, kTestLongPDX);
-    CLLocation *location = [[CLLocation alloc] initWithCoordinate:coord  altitude:kTestAlt horizontalAccuracy:kTestHorizontalAccuracy verticalAccuracy:kTestVerticalAccuracy timestamp:[NSDate date]];
-    return [location autorelease];
+    CLLocation *location = [[CLLocation alloc] initWithCoordinate:coord
+                                                         altitude:kTestAlt
+                                               horizontalAccuracy:kTestHorizontalAccuracy
+                                                 verticalAccuracy:kTestVerticalAccuracy
+                                                        timestamp:[NSDate date]];
+    return location;
 }
 
-+ (CLLocation*)testLocationSFO {
++ (CLLocation *)testLocationSFO {
     CLLocationCoordinate2D coord = CLLocationCoordinate2DMake(kTestLatSFO, kTestLongSFO);
-    CLLocation *location = [[CLLocation alloc] initWithCoordinate:coord altitude:kTestAlt horizontalAccuracy:kTestHorizontalAccuracy verticalAccuracy:kTestVerticalAccuracy timestamp:[NSDate date]];
-    return [location autorelease];                            
+    CLLocation *location = [[CLLocation alloc] initWithCoordinate:coord
+                                                         altitude:kTestAlt
+                                               horizontalAccuracy:kTestHorizontalAccuracy
+                                                 verticalAccuracy:kTestVerticalAccuracy
+                                                        timestamp:[NSDate date]];
+    return location;                            
 }
 
 
-+ (CLLocationManager*)testLocationManager {
++ (CLLocationManager *)testLocationManager {
     CLLocationManager *manager = [[CLLocationManager alloc] init];
     manager.desiredAccuracy = kTestDesiredAccuracy;
     manager.distanceFilter = kTestDistanceFilter;
-    return [manager autorelease];
+    return manager;
 }
 @end

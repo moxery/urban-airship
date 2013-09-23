@@ -42,7 +42,7 @@ SINGLETON_IMPLEMENTATION(UAAnalyticsDBManager)
         NSString *libraryPath = [NSSearchPathForDirectoriesInDomains(NSLibraryDirectory, NSUserDomainMask, YES) lastObject];
         NSString *writableDBPath = [libraryPath stringByAppendingPathComponent:DB_NAME];
         
-        self.db = [[[UASQLite alloc] initWithDBPath:writableDBPath] autorelease];
+        self.db = [[UASQLite alloc] initWithDBPath:writableDBPath];
         if (![self.db tableExists:@"analytics"]) {
             [self.db executeUpdate:CREATE_TABLE_CMD];
         }
@@ -67,9 +67,9 @@ SINGLETON_IMPLEMENTATION(UAAnalyticsDBManager)
     dispatch_sync(dbQueue, ^{
         [self.db close];
     });
-    self.db = nil;
+    #if !OS_OBJECT_USE_OBJC
     dispatch_release(dbQueue);
-    [super dealloc];
+    #endif
 }
 
 // Used for development
@@ -81,7 +81,7 @@ SINGLETON_IMPLEMENTATION(UAAnalyticsDBManager)
 }
 
 - (void)addEvent:(UAEvent *)event withSession:(NSDictionary *)session {
-    int estimateSize = [event getEstimatedSize];
+    NSUInteger estimateSize = [event getEstimatedSize];
     
     // Serialize the event data dictionary
     NSString *errString = nil;
@@ -91,7 +91,6 @@ SINGLETON_IMPLEMENTATION(UAAnalyticsDBManager)
 
     if (errString) {
         UALOG(@"Dictionary Serialization Error: %@", errString);
-        [errString release];//must be relased by caller per docs
     }
     
     //insert an empty string if there isn't any event data
@@ -108,17 +107,17 @@ SINGLETON_IMPLEMENTATION(UAAnalyticsDBManager)
          event.time,
          serializedData,
          sessionID,
-         [NSString stringWithFormat:@"%d", estimateSize]];
+         [NSString stringWithFormat:@"%lu", (unsigned long)estimateSize]];
     });
     //UALOG(@"DB Count %d", [self eventCount]);
     //UALOG(@"DB Size %d", [self sizeInBytes]);
 }
 
 //If max<0, it will get all data.
-- (NSArray *)getEvents:(int)max {
+- (NSArray *)getEvents:(NSUInteger)max {
     __block NSArray *result = nil;
     dispatch_sync(dbQueue, ^{
-        result = [self.db executeQuery:@"SELECT * FROM analytics ORDER BY _id LIMIT ?", [NSNumber numberWithInt:max]];
+        result = [self.db executeQuery:@"SELECT * FROM analytics ORDER BY _id LIMIT ?", [NSNumber numberWithInteger:max]];
     });
     return result;
 }

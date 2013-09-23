@@ -24,10 +24,10 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #import "UAInboxMessage.h"
+#import "UAInboxMessage+Internal.h"
 
 #import "UAirship.h"
 #import "UAInbox.h"
-#import "UAInboxAPIClient.h"
 #import "UAInboxMessageList.h"
 #import "UAInboxMessageListObserver.h"
 #import "UAInboxDBManager.h"
@@ -36,84 +36,25 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #import "UAGlobal.h"
 
 /*
- * Private methods
- */
-@interface UAInboxMessage()
-
-@property(nonatomic, retain) UAInboxAPIClient *client;
-
-@end
-
-/*
  * Implementation
  */
 @implementation UAInboxMessage
 
-- (id)initWithDict:(NSDictionary*)message inbox:(UAInboxMessageList *)i {
-    self = [super init];
-    if (self) {
+@dynamic title;
+@dynamic messageBodyURL;
+@dynamic messageSent;
+@dynamic unread;
+@dynamic messageURL;
+@dynamic messageID;
+@dynamic extra;
+@dynamic rawMessageObject;
 
-        message = [message dictionaryWithValuesForKeys:[[message keysOfEntriesPassingTest:^BOOL(id key, id obj, BOOL *stop) {
-                return ![obj isEqual:[NSNull null]];
-            }] allObjects]];
-
-        self.inbox = i;
-
-        self.messageID = [message objectForKey: @"message_id"];
-        self.contentType = [message objectForKey:@"content_type"];
-        self.title = [message objectForKey: @"title"];
-        self.extra = [message objectForKey: @"extra"];
-        self.rawMessageObject = message;
-
-        self.messageBodyURL = [NSURL URLWithString: [message objectForKey: @"message_body_url"]];
-        self.messageURL = [NSURL URLWithString: [message objectForKey: @"message_url"]];
-
-        self.unread = [[message objectForKey: @"unread"] intValue] ? YES : NO;
-
-        NSString *dateString = [message objectForKey: @"message_sent"];
-        self.messageSent = [[UAUtils ISODateFormatterUTC] dateFromString:dateString];
-
-        self.client = [[[UAInboxAPIClient alloc] init] autorelease];
-    }
-
-    return self;
-}
-
-- (void)dealloc {
-    self.messageID = nil;
-    self.messageBodyURL = nil;
-    self.messageURL = nil;
-    self.contentType = nil;
-    self.messageSent = nil;
-    self.title = nil;
-    self.extra = nil;
-    self.rawMessageObject = nil;
-    self.client = nil;
-    [super dealloc];
-}
-
+@synthesize inbox;
+@synthesize contentType;
+@synthesize client;
 
 #pragma mark -
 #pragma mark NSObject methods
-
-// NSObject override
-- (BOOL)isEqual:(id)anObject {
-    if (self == anObject) {
-        return YES;
-    }
-
-    if (anObject == nil || ![anObject isKindOfClass:[UAInboxMessage class]]) {
-        return NO;
-    }
-
-    UAInboxMessage *other = (UAInboxMessage *)anObject;
-    return [self.messageID isEqualToString:other.messageID];
-}
-
-// NSObject override
-- (NSUInteger)hash {
-    return [self.messageID hash];
-}
 
 // NSObject override
 - (NSString *)description {
@@ -123,36 +64,66 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #pragma mark -
 #pragma mark Mark As Read Delegate Methods
 
-- (BOOL)markAsRead {
-    
-    if (!self.unread) {
-        return YES;
+- (UADisposable *)markAsReadWithSuccessBlock:(UAInboxMessageCallbackBlock)successBlock
+                  withFailureBlock:(UAInboxMessageCallbackBlock)failureBlock {
+
+    if (!self.unread || self.inbox.isBatchUpdating) {
+        return nil;
     }
-    
-    if (self.inbox.isBatchUpdating) {
-        return NO;
-    }
-    
+
     self.inbox.isBatchUpdating = YES;
+
+    __block BOOL isCallbackCancelled = NO;
+    UADisposable *disposable = [UADisposable disposableWithBlock:^{
+        isCallbackCancelled = YES;
+    }];
 
     [self.client
      markMessageRead:self onSuccess:^{
          if (self.unread) {
              self.inbox.unreadCount = self.inbox.unreadCount - 1;
              self.unread = NO;
-             [[UAInboxDBManager shared] updateMessageAsRead:self];
+             [[UAInboxDBManager shared] saveContext];
          }
 
          self.inbox.isBatchUpdating = NO;
+
          [self.inbox notifyObservers:@selector(singleMessageMarkAsReadFinished:) withObject:self];
 
-     }onFailure:^(UAHTTPRequest *request){
-         UA_LDEBUG(@"Mark as read failed for message %@ with HTTP status: %d", self.messageID, request.response.statusCode);
+         if (successBlock && !isCallbackCancelled) {
+             successBlock(self);
+         }
+     } onFailure:^(UAHTTPRequest *request){
+         UA_LDEBUG(@"Mark as read failed for message %@ with HTTP status: %ld", self.messageID, (long)request.response.statusCode);
          self.inbox.isBatchUpdating = NO;
+
          [self.inbox notifyObservers:@selector(singleMessageMarkAsReadFailed:) withObject:self];
+
+         if (failureBlock && !isCallbackCancelled) {
+             failureBlock(self);
+         }
      }];
 
-    return YES;
+    return disposable;
+}
+
+- (UADisposable *)markAsReadWithDelegate:(id<UAInboxMessageListDelegate>)delegate {
+    __weak id<UAInboxMessageListDelegate> weakDelegate = delegate;
+
+    return [self markAsReadWithSuccessBlock:^(UAInboxMessage *message){
+        if ([weakDelegate respondsToSelector:@selector(singleMessageMarkAsReadFinished:)]) {
+            [weakDelegate singleMessageMarkAsReadFinished:message];
+        }
+    } withFailureBlock: ^(UAInboxMessage *message){
+        if ([weakDelegate respondsToSelector:@selector(singleMessageMarkAsReadFailed:)]) {
+            [weakDelegate singleMessageMarkAsReadFailed:message];
+        }
+    }];
+}
+
+- (BOOL)markAsRead {
+    //the return value should be YES if a request was sent or if we're already marked read.
+    return [self markAsReadWithSuccessBlock:nil withFailureBlock:nil] || !self.unread;
 }
 
 #pragma mark -
@@ -195,6 +166,14 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
             [webView stringByEvaluatingJavaScriptFromString:script];
         }
     }
+}
+
+-(UAInboxAPIClient *)client {
+    if (!client) {
+       client = [[UAInboxAPIClient alloc] init];
+    }
+
+    return client;
 }
 
 @end

@@ -23,9 +23,11 @@
 # OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+
 TARGET_NAME="AirshipLib"
+TEMP_DIR=$(mktemp -d -t $TARGET_NAME)
 PROJECT_PATH=`dirname $0`/AirshipLib.xcodeproj
-XCODE_SETTINGS="/tmp/${TARGET_NAME}.settings"
+XCODE_SETTINGS="${TEMP_DIR}/${TARGET_NAME}.settings"
 
 # Query the Xcode Project for the current settings, based on the current target
 # Dump the settings output as an awkdb into /tmp
@@ -40,8 +42,9 @@ EXECUTABLE_PREFIX=$(xcode_setting "EXECUTABLE_PREFIX")
 PRODUCT_NAME=$(xcode_setting "PRODUCT_NAME")
 BINARY_DIR="$SRCROOT/distribution_binaries"
 
-lib_name="${EXECUTABLE_PREFIX}${PRODUCT_NAME}.${EXECUTABLE_EXTENSION}"
-lib_base_name="$(echo $lib_name | awk -F '-' '{print $1}')"
+lib_base_name="$(echo ${EXECUTABLE_PREFIX}${PRODUCT_NAME} | awk -F '-' '{print $1}')"
+version="$(echo $PRODUCT_NAME | awk -F '-' '{print $2}')"
+
 dest_lib_root="${SRCROOT}/../Airship"
 
 # Remove old libraries
@@ -58,8 +61,8 @@ do
     sample_prj_setting_file="$sample_prj_root/$sample_prj_name.xcodeproj/project.pbxproj"
     echo "update library reference in $sample_prj_setting_file"
 	if [[ -f "$sample_prj_setting_file" ]]; then
-        sed "s/$lib_base_name[^ ]*\.${EXECUTABLE_EXTENSION}/$lib_name/g" "$sample_prj_setting_file" > "/tmp/$sample_prj_name.tmp"
-        chgrp staff "/tmp/$sample_prj_name.tmp"
-	    mv "/tmp/$sample_prj_name.tmp" "$sample_prj_setting_file"
+        sed "s/\($lib_base_name[^ ]*-\)[0-9]*\.[0-9]*\.[0-9]*\(\.$EXECUTABLE_EXTENSION\)/\1$version\2/g" "$sample_prj_setting_file" > "$TEMP_DIR/$sample_prj_name.tmp"
+        chgrp staff "$TEMP_DIR/$sample_prj_name.tmp"
+	    mv "$TEMP_DIR/$sample_prj_name.tmp" "$sample_prj_setting_file"
 	fi
 done

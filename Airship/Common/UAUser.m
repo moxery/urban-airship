@@ -31,7 +31,6 @@
 #import "UAUtils.h"
 #import "UAConfig.h"
 #import "UAKeychainUtils.h"
-#import "UA_SBJSON.h"
 
 
 static UAUser *_defaultUser;
@@ -63,13 +62,6 @@ NSString * const UAUserCreatedNotification = @"com.urbanairship.notification.use
     
 }
 
-- (void)dealloc {
-    self.username = nil;
-    self.password = nil;
-    self.url = nil;
-    self.apiClient = nil;
-    [super dealloc];
-}
 
 + (void)land {
 
@@ -83,7 +75,7 @@ NSString * const UAUserCreatedNotification = @"com.urbanairship.notification.use
     self = [super init];
     if (self) {
         // init
-        self.apiClient = [[[UAUserAPIClient alloc] init] autorelease];
+        self.apiClient = [[UAUserAPIClient alloc] init];
         self.appKey = [UAirship shared].config.appKey;
     }
     
@@ -99,6 +91,12 @@ NSString * const UAUserCreatedNotification = @"com.urbanairship.notification.use
         }
         
         if (![UAirship shared].ready) {
+            return;
+        }
+
+        if (!self.appKey) {
+            UA_LERR(@"No App Key was set on UAUser. Unable to initialize.");
+            UA_LERR("[UAirship takeOff] has probably not been called yet or is being called after application:didFinishLaunchingWithOptions: has returned");
             return;
         }
                 
@@ -256,7 +254,7 @@ NSString * const UAUserCreatedNotification = @"com.urbanairship.notification.use
     [self.apiClient updateDeviceToken:deviceToken forUsername:self.username onSuccess:^(NSString *updatedToken) {
         UA_LINFO(@"Device token updated to: %@", updatedToken);
     } onFailure:^(UAHTTPRequest *request) {
-        UA_LDEBUG(@"Device token update failed with status: %d", request.response.statusCode);
+        UA_LDEBUG(@"Device token update failed with status: %ld", (long)request.response.statusCode);
     }];
 }
 

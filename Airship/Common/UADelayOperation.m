@@ -3,7 +3,11 @@
 
 @interface UADelayOperation()
 @property(nonatomic, assign) NSInteger seconds;
-@property(nonatomic, assign) dispatch_semaphore_t semaphore;
+#if OS_OBJECT_USE_OBJC
+@property(nonatomic, strong) dispatch_semaphore_t semaphore;    // GCD objects use ARC
+#else
+@property(nonatomic, assign) dispatch_semaphore_t semaphore;    // GCD object don't use ARC
+#endif
 @end
 
 @implementation UADelayOperation
@@ -12,7 +16,7 @@
     self = [super init];
     if (self) {
         self.semaphore = dispatch_semaphore_create(0);
-        __block UADelayOperation *_self = self;
+        __weak UADelayOperation *_self = self;
 
         [self addExecutionBlock:^{
             //dispatch time is calculated as nanoseconds delta offset
@@ -31,12 +35,13 @@
 }
 
 - (void)dealloc {
+    #if !OS_OBJECT_USE_OBJC
     dispatch_release(self.semaphore);
-    [super dealloc];
+    #endif
 }
 
 + (id)operationWithDelayInSeconds:(NSInteger)seconds {
-    return [[[UADelayOperation alloc] initWithDelayInSeconds:seconds] autorelease];
+    return [[UADelayOperation alloc] initWithDelayInSeconds:seconds];
 }
 
 @end

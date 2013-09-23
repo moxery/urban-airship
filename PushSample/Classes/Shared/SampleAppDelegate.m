@@ -32,11 +32,6 @@
 
 @implementation SampleAppDelegate
 
-- (void)dealloc {
-    self.controller = nil;
-    self.window = nil;
-    [super dealloc];
-}
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
 
@@ -96,24 +91,39 @@
     [[UAPush shared] resetBadge];
 }
 
+
 - (void)application:(UIApplication *)application didReceiveRemoteNotification:(NSDictionary *)userInfo {
     
     UA_LINFO(@"Received remote notification (in appDelegate): %@", userInfo);
 
     // Optionally provide a delegate that will be used to handle notifications received while the app is running
-    // [UAPush shared].delegate = your custom push delegate class conforming to the UAPushNotificationDelegate protocol
+    // [UAPush shared].pushNotificationDelegate = your custom push delegate class conforming to the UAPushNotificationDelegate protocol
     
     // Reset the badge after a push received (optional)
     [[UAPush shared] resetBadge];
 }
 
+- (void)application:(UIApplication *)application didReceiveRemoteNotification:(NSDictionary *)userInfo fetchCompletionHandler:(void (^)(UIBackgroundFetchResult))completionHandler{
+    UA_LINFO(@"Received remote notification (in appDelegate): %@", userInfo);
+
+    // Optionally provide a delegate that will be used to handle notifications received while the app is running
+    // [UAPush shared].pushNotificationDelegate = your custom push delegate class conforming to the UAPushNotificationDelegate protocol
+
+    // Reset the badge after a push is received in a active or inactive state
+    if (application.applicationState != UIApplicationStateBackground) {
+        [[UAPush shared] resetBadge];
+    }
+
+    completionHandler(UIBackgroundFetchResultNoData);
+}
+
 - (void)failIfSimulator {
     if ([[[UIDevice currentDevice] model] rangeOfString:@"Simulator"].location != NSNotFound) {
-        UIAlertView *someError = [[[UIAlertView alloc] initWithTitle:@"Notice"
+        UIAlertView *someError = [[UIAlertView alloc] initWithTitle:@"Notice"
                                                             message:@"You will not be able to receive push notifications in the simulator."
                                                            delegate:self
                                                   cancelButtonTitle:@"OK"
-                                                  otherButtonTitles:nil] autorelease];
+                                                  otherButtonTitles:nil];
 
         // Let the UI finish launching first so it doesn't complain about the lack of a root view controller
         // Delay execution of the block for 1/2 second.

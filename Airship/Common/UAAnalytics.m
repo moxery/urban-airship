@@ -28,7 +28,6 @@
 
 #import "UAAnalytics+Internal.h"
 
-#import "UA_SBJSON.h"
 #import "UA_Reachability.h"
 
 #import "UAirship.h"
@@ -41,6 +40,8 @@
 #import "UAHTTPConnectionOperation.h"
 #import "UADelayOperation.h"
 #import "UAInboxUtils.h"
+#import "NSJSONSerialization+UAAdditions.h"
+#import "UAPush.h"
 
 typedef void (^UAAnalyticsUploadCompletionBlock)(void);
 
@@ -54,13 +55,7 @@ typedef void (^UAAnalyticsUploadCompletionBlock)(void);
     
     [self.queue cancelAllOperations];
     
-    self.queue = nil;
-    self.packageVersion = nil;
-    self.notificationUserInfo = nil;
-    self.session = nil;
-    self.config = nil;
     
-    [super dealloc];
 }
 
 - (id)initWithConfig:(UAConfig *)airshipConfig {
@@ -109,19 +104,21 @@ typedef void (^UAAnalyticsUploadCompletionBlock)(void);
         [self initSession];
         self.sendBackgroundTask = UIBackgroundTaskInvalid;
 
-        self.queue = [[[NSOperationQueue alloc] init] autorelease];
+        self.queue = [[NSOperationQueue alloc] init];
         self.queue.maxConcurrentOperationCount = 1;
-
-        //call send after waiting for the first batch upload interval
-        UADelayOperation *delayOperation = [UADelayOperation operationWithDelayInSeconds:UAAnalyticsFirstBatchUploadInterval];
-        delayOperation.completionBlock = ^{
-            [self send];
-        };
-
-        [self.queue addOperation:delayOperation];
     }
     
     return self;
+}
+
+- (void) delayNextSend:(NSTimeInterval)time {
+    //call send after waiting for the first batch upload interval
+    UADelayOperation *delayOperation = [UADelayOperation operationWithDelayInSeconds:UAAnalyticsFirstBatchUploadInterval];
+    delayOperation.completionBlock = ^{
+        [self send];
+    };
+
+    [self.queue addOperation:delayOperation];
 }
 
 - (void)initSession {
@@ -256,7 +253,7 @@ typedef void (^UAAnalyticsUploadCompletionBlock)(void);
 
 - (void)invalidateBackgroundTask {
     if (self.sendBackgroundTask != UIBackgroundTaskInvalid) {
-        UA_LTRACE(@"Ending analytics background task %u", self.sendBackgroundTask);
+        UA_LTRACE(@"Ending analytics background task %lu", (unsigned long)self.sendBackgroundTask);
         
         [[UIApplication sharedApplication] endBackgroundTask:self.sendBackgroundTask];
         self.sendBackgroundTask = UIBackgroundTaskInvalid;
@@ -324,10 +321,15 @@ typedef void (^UAAnalyticsUploadCompletionBlock)(void);
 #pragma mark Analytics
 
 - (void)handleNotification:(NSDictionary*)userInfo inApplicationState:(UIApplicationState)applicationState {
-    if (applicationState == UIApplicationStateActive) {
-        [self addEvent:[UAEventPushReceived eventWithContext:userInfo]];
-    } else {
-        self.notificationUserInfo = userInfo;
+    switch (applicationState) {
+        case UIApplicationStateActive:
+            [self addEvent:[UAEventPushReceived eventWithContext:userInfo]];
+            break;
+        case UIApplicationStateInactive:
+            self.notificationUserInfo = userInfo;
+            break;
+        case UIApplicationStateBackground:
+            break;
     }
 }
 
@@ -414,7 +416,7 @@ typedef void (^UAAnalyticsUploadCompletionBlock)(void);
     }
 }
 
-- (void)setMinBatchInterval:(int)minBatchInterval {
+- (void)setMinBatchInterval:(NSInteger)minBatchInterval {
     if (minBatchInterval < kMinBatchIntervalSeconds) {
         _minBatchInterval = kMinBatchIntervalSeconds;
     }else if (minBatchInterval > kMaxBatchIntervalSeconds) {
@@ -438,7 +440,7 @@ typedef void (^UAAnalyticsUploadCompletionBlock)(void);
         self.oldestEventTime = 0;
     }
 
-    UA_LTRACE(@"Database size: %d", self.databaseSize);
+    UA_LTRACE(@"Database size: %ld", (long)self.databaseSize);
     UA_LTRACE(@"Oldest Event: %f", self.oldestEventTime);
 }
 
@@ -496,6 +498,7 @@ typedef void (^UAAnalyticsUploadCompletionBlock)(void);
     [request addRequestHeader:@"X-UA-Locale-Language" value:[[NSLocale currentLocale] objectForKey:NSLocaleLanguageCode]];
     [request addRequestHeader:@"X-UA-Locale-Country" value:[[NSLocale currentLocale] objectForKey: NSLocaleCountryCode]];
     [request addRequestHeader:@"X-UA-Locale-Variant" value:[[NSLocale currentLocale] objectForKey: NSLocaleVariantCode]];
+    [request addRequestHeader:@"X-UA-Push-Address" value:[UAPush shared].deviceToken];
 
     return request;
 }
@@ -503,7 +506,7 @@ typedef void (^UAAnalyticsUploadCompletionBlock)(void);
 - (void)pruneEvents {
     // Delete older events until the database size is met
     while (self.databaseSize > self.maxTotalDBSize) {
-        UA_LTRACE(@"Database exceeds max size of %d bytes... Deleting oldest session.", self.maxTotalDBSize);
+        UA_LTRACE(@"Database exceeds max size of %ld bytes... Deleting oldest session.", (long)self.maxTotalDBSize);
         [[UAAnalyticsDBManager shared] deleteOldestSession];
         [self resetEventsDatabaseStatus];
     }
@@ -530,7 +533,7 @@ typedef void (^UAAnalyticsUploadCompletionBlock)(void);
         return nil;
     }
 
-    int avgEventSize = self.databaseSize / [[UAAnalyticsDBManager shared] eventCount];
+    NSUInteger avgEventSize = self.databaseSize / [[UAAnalyticsDBManager shared] eventCount];
     int actualSize = 0;
     int batchEventCount = 0;
     
@@ -568,13 +571,12 @@ typedef void (^UAAnalyticsUploadCompletionBlock)(void);
             
             if (errString) {
                 UA_LTRACE("Deserialization Error: %@", errString);
-                [errString release];//must be relased by caller per docs
             }
         }
         
         // Always include a data entry, even if it is empty
         if (!eventData) {
-            eventData = [[[NSMutableDictionary alloc] init] autorelease];
+            eventData = [[NSMutableDictionary alloc] init];
         }
         
         [eventData setValue:[event objectForKey:@"session_id"] forKey:@"session_id"];
@@ -607,20 +609,18 @@ typedef void (^UAAnalyticsUploadCompletionBlock)(void);
 - (UAHTTPConnectionOperation *)sendOperationWithEvents:(NSArray *)events {
 
     UAHTTPRequest *analyticsRequest = [self analyticsRequest];
+
+    [analyticsRequest appendBodyData:[NSJSONSerialization dataWithJSONObject:events
+                                                                     options:0
+                                                                       error:nil]];
     
-    UA_SBJsonWriter *writer = [[UA_SBJsonWriter alloc] autorelease];
-    
-    writer.humanReadable = NO;//strip whitespace
-    [analyticsRequest appendBodyData:[[writer stringWithObject:events] dataUsingEncoding:NSUTF8StringEncoding]];
-    
-    writer.humanReadable = YES; //turn on formatting for debugging
     UA_LTRACE(@"Sending to server: %@", self.config.analyticsURL);
     UA_LTRACE(@"Sending analytics headers: %@", [analyticsRequest.headers descriptionWithLocale:nil indent:1]);
-    UA_LTRACE(@"Sending analytics body: %@", [writer stringWithObject:events]);
+    UA_LTRACE(@"Sending analytics body: %@", [NSJSONSerialization stringWithObject:events options:NSJSONWritingPrettyPrinted]);
 
     UAHTTPConnectionSuccessBlock successBlock = ^(UAHTTPRequest *request){
-        UA_LDEBUG(@"Analytics data sent successfully. Status: %d", [request.response statusCode]);
-        UA_LTRACE(@"responseData=%@, length=%d", request.responseString, [request.responseData length]);
+        UA_LDEBUG(@"Analytics data sent successfully. Status: %ld", (long)[request.response statusCode]);
+        UA_LTRACE(@"responseData=%@, length=%lu", request.responseString, (unsigned long)[request.responseData length]);
         self.lastSendTime = [NSDate date];
 
         // Update analytics settings with new header values
@@ -630,7 +630,7 @@ typedef void (^UAAnalyticsUploadCompletionBlock)(void);
             [[UAAnalyticsDBManager shared] deleteEvents:events];
             [self resetEventsDatabaseStatus];
         } else {
-            UA_LTRACE(@"Send analytics data request failed: %d", [request.response statusCode]);
+            UA_LTRACE(@"Send analytics data request failed: %ld", (long)[request.response statusCode]);
         }
     };
 

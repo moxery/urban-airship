@@ -11,7 +11,7 @@
  this list of conditions and the following disclaimer in the documentation
  and/or other materials provided withthe distribution.
 
- THIS SOFTWARE IS PROVIDED BY THE URBAN AIRSHIP INC ``AS IS'' AND ANY EXPRESS OR
+ THIS SOFTWARE IS PROVIDED BY THE URBAN AIRSHIP INC``AS IS'' AND ANY EXPRESS OR
  IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
  EVENT SHALL URBAN AIRSHIP INC OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
@@ -25,36 +25,31 @@
 
 #import <Foundation/Foundation.h>
 
-@interface UAInboxURLCache : NSURLCache
-
-@property(nonatomic, retain) NSString *cacheDirectory;
-@property(nonatomic, retain) NSArray *resourceTypes;
+/**
+ * The NSJSONSerialization convenience methods.
+ */
+@interface NSJSONSerialization (UAAdditions)
 
 /**
- * The actual disk capacity of this cache.
- *
- * This method is useful because the diskCapacity getter on this class returns a highly
- * inflated value.
- *
- * @see diskCapacity
- *
- * @returns The cache's actual maximum size, in bytes
+ * Converts a Foundation object to a JSON formatted NSString
+ * @param jsonObject Foundation object to convert 
+ * @return NSString formatted as JSON, or nil if an error occurs
  */
- 
-@property(nonatomic, assign) NSUInteger actualDiskCapacity;
++ (NSString *)stringWithObject:(id)jsonObject;
 
 /**
- * Overrides [NSURLCache diskCapacity].
- *
- * This method returns a highly inflated number. UIWebView will fail to cache large items
- * if the size of the content is large in comparison to the size of the disk cache. A large
- * value (actual capacity) * 50 ensures that it will attempt to cache everything, allowing
- * this cache to make its own decisions.
- *
- * @see actualDiskCapacity
- *
- * @returns actualDiskCapacity * 50
+ * Converts a Foundation object to a JSON formatted NSString
+ * @param jsonObject Foundation object to convert
+ * @param opt NSJSONWritingOptions options
+ * @return NSString formatted as JSON, or nil if an error occurs
  */
-- (NSUInteger)diskCapacity;
++ (NSString *)stringWithObject:(id)jsonObject options:(NSJSONWritingOptions)opt;
+
+/**
+ * Create a Foundation object from JSON string
+ * @param jsonString the JSON NSString to convert
+ * @return A Foundation object, or nil if an error occurs.
+ */
++ (id)objectWithString:(NSString *)jsonString;
 
 @end

@@ -38,7 +38,6 @@ extern UAPushSettingsKey *const UAPushBadgeSettingsKey;
 extern UAPushSettingsKey *const UAPushQuietTimeSettingsKey;
 extern UAPushSettingsKey *const UAPushQuietTimeEnabledSettingsKey;
 extern UAPushSettingsKey *const UAPushTimeZoneSettingsKey;
-extern UAPushSettingsKey *const UAPushDeviceTokenDeprecatedSettingsKey;
 extern UAPushSettingsKey *const UAPushDeviceCanEditTagsKey;
 extern UAPushSettingsKey *const UAPushNeedsUnregistering;
 
@@ -55,7 +54,7 @@ extern UAPushUserInfoKey *const UAPushUserInfoPushEnabled;
 /**
  * Default push handler.
  */
-@property (nonatomic, retain) NSObject <UAPushNotificationDelegate> *defaultPushHandler;
+@property (nonatomic, strong) NSObject <UAPushNotificationDelegate> *defaultPushHandler;
 
 /**
  * Device token as a string.
@@ -71,7 +70,7 @@ extern UAPushUserInfoKey *const UAPushUserInfoPushEnabled;
 /**
  * The client for the Urban Airship device registration API.
  */
-@property (nonatomic, retain) UADeviceAPIClient *deviceAPIClient;
+@property (nonatomic, strong) UADeviceAPIClient *deviceAPIClient;
 
 /**
  * Get the local time zone, considered the default.
@@ -117,4 +116,20 @@ extern UAPushUserInfoKey *const UAPushUserInfoPushEnabled;
  */
 + (void)land;
 
+/**
+ * Notifies the push delegate of any foreground notification (alert, badge, sound)
+ * for a push
+ * @param notification The notification payload
+ */
+- (void)notifyForegroundNotification:(NSDictionary *)notification;
+
+/**
+ * Registers or updates the current registration with an API call. If push notifications are
+ * not enabled, this unregisters the device token.
+ *
+ * Add a `UARegistrationDelegate` to `UAPush` to receive success and failure callbacks.
+ *
+ *@param forcefully Tells the device api client to do any device api call forcefully.
+ */
+- (void)updateRegistrationForcefully:(BOOL)forcefully;
 @end

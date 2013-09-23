@@ -29,7 +29,6 @@
 #import <CommonCrypto/CommonDigest.h>
 
 // UA external libraries
-#import "UA_SBJSON.h"
 #import "UA_Base64.h"
 #import "UAHTTPConnection.h"
 
@@ -42,6 +41,7 @@
 // C includes
 #include <sys/types.h>
 #include <sys/sysctl.h>
+#include <sys/xattr.h>
 
 @implementation UAUtils
 
@@ -49,7 +49,7 @@
 + (NSString *)md5:(NSString *)sourceString  {
     const char *cStr = [sourceString UTF8String];
     unsigned char result[16];
-    CC_MD5(cStr, strlen(cStr), result);
+    CC_MD5(cStr, (unsigned int)strlen(cStr), result);
     return [NSString stringWithFormat:
             @"%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X",
             result[0], result[1], result[2], result[3],
@@ -68,10 +68,10 @@
   CFUUIDRef uuidObj = CFUUIDCreate(nil);
     
   //get the string representation of the UUID
-    NSString *uuidString = (NSString*)CFUUIDCreateString(nil, uuidObj);
+    NSString *uuidString = (NSString*)CFBridgingRelease(CFUUIDCreateString(nil, uuidObj));
     CFRelease(uuidObj);
   
-    return [uuidString autorelease];
+    return uuidString;
 }
 
 + (NSString *)deviceModelName {
@@ -130,11 +130,13 @@
      * Taken from http://madebymany.com/blog/url-encoding-an-nsstring-on-ios
      */
 
-    CFStringRef result = CFURLCreateStringByAddingPercentEscapes(NULL, (CFStringRef)string, NULL, (CFStringRef)@"!*'\"();:@&=+$,/?%#[] ", CFStringConvertNSStringEncodingToEncoding(encoding));
+    CFStringRef result = CFURLCreateStringByAddingPercentEscapes(NULL,
+                                                                 (CFStringRef)string,
+                                                                 NULL, (CFStringRef)@"!*'\"();:@&=+$,/?%#[] ",
+                                                                 CFStringConvertNSStringEncodingToEncoding(encoding));
     
     /* autoreleased string */
-    NSString* value = [NSString stringWithString:(NSString*)result];
-    CFRelease(result);
+    NSString *value = [NSString stringWithString:(NSString*)CFBridgingRelease(result)];
     
     return value;
 }
@@ -146,11 +148,9 @@
     
     UAHTTPRequest *request = [UAHTTPRequest requestWithURL:url];
     request.HTTPMethod = method;
-    
     request.username = [UAUser defaultUser].username;
     request.password = [UAUser defaultUser].password;
-    
-    
+
     return request;
 }
 
@@ -161,12 +161,10 @@
     
     UAHTTPRequest *request = [UAHTTPRequest requestWithURL:url];
     request.HTTPMethod = method;
-    
     request.username = [UAirship shared].config.appKey;
     request.password = [UAirship shared].config.appSecret;
-    
+
     return request;
-    
 }
 
 + (void)logFailedRequest:(UAHTTPRequest *)request withMessage:(NSString *)message {
@@ -178,7 +176,7 @@
           @"\n\tMethod: %@"
           @"\n\tBody: %@"
           @"\nResponse:"
-          @"\n\tStatus code: %d"
+          @"\n\tStatus code: %ld"
           @"\n\tHeaders: %@"
           @"\n\tBody: %@"
           @"\nUsing U/P: [ %@ / %@ ]",
@@ -188,7 +186,7 @@
           [request.headers description],
           request.HTTPMethod,
           [request.body description],
-          [request.response statusCode],
+          (long)[request.response statusCode],
           [[request.response allHeaderFields] description],
           [request.responseData description],
           request.username,
@@ -209,14 +207,40 @@
 }
 
 + (NSDateFormatter *)ISODateFormatterUTC {
-    NSDateFormatter* dateFormatter = [[[NSDateFormatter alloc] init] autorelease];
-    NSLocale *enUSPOSIXLocale = [[[NSLocale alloc] initWithLocaleIdentifier:@"en_US_POSIX"] autorelease];
+    NSDateFormatter* dateFormatter = [[NSDateFormatter alloc] init];
+    NSLocale *enUSPOSIXLocale = [[NSLocale alloc] initWithLocaleIdentifier:@"en_US_POSIX"];
     [dateFormatter setLocale:enUSPOSIXLocale];
     [dateFormatter setTimeStyle:NSDateFormatterFullStyle];
     [dateFormatter setDateFormat:@"yyyy-MM-dd HH:mm:ss"];
     [dateFormatter setTimeZone:[NSTimeZone timeZoneForSecondsFromGMT:0]];
 
     return dateFormatter;
+}
+
++ (BOOL)addSkipBackupAttributeToItemAtURL:(NSURL *)url {
+    if (![[NSFileManager defaultManager] fileExistsAtPath: [url path]]) {
+        return NO;
+    }
+
+    if (kCFCoreFoundationVersionNumber >= kCFCoreFoundationVersionNumber_iOS_5_1) {
+        NSError *error = nil;
+        BOOL success = [url setResourceValue: [NSNumber numberWithBool: YES]
+                                      forKey: NSURLIsExcludedFromBackupKey error: &error];
+        if (!success) {
+            UA_LERR(@"Error excluding %@ from backup %@", [url lastPathComponent], error);
+        }
+
+        return success;
+    } else {
+        u_int8_t b = 1;
+        BOOL success = setxattr([[url path] fileSystemRepresentation], "com.apple.MobileBackup", &b, 1, 0, 0) == 0;
+
+        if (!success) {
+            UA_LERR(@"Error excluding %@ from backup using setxattr", [url lastPathComponent]);
+        }
+
+        return success;
+    }
 }
 
 @end

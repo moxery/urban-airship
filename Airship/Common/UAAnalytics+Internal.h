@@ -28,28 +28,23 @@
 #import "UAAnalytics.h"
 
 //total size in bytes that the event queue is allowed to grow to.
-#define kMaxTotalDBSizeBytes 5*1024*1024 // local max of 5MB
-#define kMinTotalDBSizeBytes 10*1024     // local min of 10KB
+#define kMaxTotalDBSizeBytes (NSInteger)5*1024*1024 // local max of 5MB
+#define kMinTotalDBSizeBytes (NSInteger)10*1024     // local min of 10KB
 
 // total size in bytes that a given event post is allowed to send.
-#define kMaxBatchSizeBytes 500*1024      // local max of 500KB
-#define kMinBatchSizeBytes 1024          // local min of 1KB
+#define kMaxBatchSizeBytes (NSInteger)500*1024      // local max of 500KB
+#define kMinBatchSizeBytes (NSInteger)1024          // local min of 1KB
 
 // maximum amount of time in seconds that events should queue for
-#define kMaxWaitSeconds 14*24*3600      // local max of 14 days
-#define kMinWaitSeconds 7*24*3600       // local min of 7 days
+#define kMaxWaitSeconds (NSInteger)14*24*3600      // local max of 14 days
+#define kMinWaitSeconds (NSInteger)7*24*3600       // local min of 7 days
 
 // The actual amount of time in seconds that elapse between event-server posts
-#define kMinBatchIntervalSeconds 60        // local min of 60s
-#define kMaxBatchIntervalSeconds 7*24*3600  // local max of 7 days
+#define kMinBatchIntervalSeconds (NSInteger)60        // local min of 60s
+#define kMaxBatchIntervalSeconds (NSInteger)7*24*3600  // local max of 7 days
 
-// minimum amount of time between background location events
+// Minimum amount of time between background location events.
 #define kMinBackgroundLocationIntervalSeconds 900 // 900 seconds = 15 minutes
-
-// Offset time for use when the app init. This is the time between object
-// creation and first upload. Subsequent uploads are defined by
-// X_UA_MIN_BATCH_INTERVAL
-#define UAAnalyticsFirstBatchUploadInterval 15 // time in seconds
 
 #define kMaxTotalDBSizeUserDefaultsKey @"X-UA-Max-Total"
 #define kMaxBatchSizeUserDefaultsKey @"X-UA-Max-Batch"
@@ -61,79 +56,189 @@
 
 @interface UAAnalytics ()
 
-@property (nonatomic, retain) NSMutableDictionary *session;
-@property (nonatomic, retain) NSDictionary *notificationUserInfo;
+/**
+ * The analytics session as an NSMutableDictionary.
+ */
+@property (nonatomic, strong) NSMutableDictionary *session;
+
+/**
+ * The notification as an NSDictionary.
+ */
+@property (nonatomic, strong) NSDictionary *notificationUserInfo;
+
+/**
+ * The maximum size in bytes that the event queue is allowed
+ * to grow to.
+ */
 @property (nonatomic, assign) NSInteger maxTotalDBSize;
+
+/**
+ * The maximum size in bytes that a given event post is allowed
+ * to send.
+ */
 @property (nonatomic, assign) NSInteger maxBatchSize;
+
+/**
+ * The maximum amount of time in seconds that events should queue for.
+ */
 @property (nonatomic, assign) NSInteger maxWait;
+
+/**
+ * The actual amount of time in seconds that elapse between
+ * event-server posts.
+ */
 @property (nonatomic, assign) NSInteger minBatchInterval;
-@property (nonatomic, assign) NSInteger databaseSize;
+
+/**
+ * The size of the database.
+ */
+@property (nonatomic, assign) NSUInteger databaseSize;
+
+/**
+ * The oldest event time as an NSTimeInterval.
+ */
 @property (nonatomic, assign) NSTimeInterval oldestEventTime;
+
+/**
+ * Background identifier for the analytics background task.
+ */
 @property (nonatomic, assign) UIBackgroundTaskIdentifier sendBackgroundTask;
-@property (nonatomic, retain) UAConfig *config;
+
+/**
+ * The UAConfig object containing the configuration values.
+ */
+@property (nonatomic, strong) UAConfig *config;
+
+/**
+ * The package version.
+ */
 @property (nonatomic, copy) NSString *packageVersion;
-@property (nonatomic, retain) NSOperationQueue *queue;
+
+/**
+ * The operation queue used for analytics.
+ */
+@property (nonatomic, strong) NSOperationQueue *queue;
+
+/**
+ * YES if analytics upload is in progress.
+ */
 @property (assign) BOOL isSending;
 
-// YES if the app is in the process of entering the foreground, but is not yet active.
-// This flag is used to delay sending an `app_foreground` event until the app is active
-// and all of the launch/notification data is present.
+/**
+ * YES if the app is in the process of entering the foreground, but is not yet active.
+ * This flag is used to delay sending an `app_foreground` event until the app is active
+ * and all of the launch/notification data is present.
+ */
 @property (nonatomic, assign) BOOL isEnteringForeground;
 
-
+/**
+ * Initializes the analytics session.
+ */
 - (void)initSession;
 
-/* Restores any upload event settings from the 
- standardUserDefaults
+/**
+ * Restores any upload event settings from the
+ * standardUserDefaults.
  */
 - (void)restoreSavedUploadEventSettings;
 
-/* Saves any upload event settings from the headers to the 
- standardUserDefaults 
+/**
+ * Saves any upload event settings from the headers to the
+ * standardUserDefaults.
  */
 - (void)saveUploadEventSettings;
 
+/**
+ * Resets the event's database oldestEventTime.
+ */
 - (void)resetEventsDatabaseStatus;
 
-/* Sending analytics */
+/**
+ * Sending analytics.
+ */
 - (void)send;
 
+/**
+ * Update analytics parameters with header values from the response.
+ * @param response The response as an NSHTTPURLResponse.
+ */
 - (void)updateAnalyticsParametersWithHeaderValues:(NSHTTPURLResponse*)response;
 
+/**
+ * YES if the app is in the background and there is a valid background task to
+ * upload events. NO if analytics is disabled or there are no analytics events
+ * to upload.
+ */
 - (BOOL)shouldSendAnalytics;
-- (void)setLastSendTime:(NSDate*)lastSendTime;
+
+/**
+ * Sets the last send time analytics data was sent successfully.
+ * @param lastSendTime The time as an NSDate.
+ */
+- (void)setLastSendTime:(NSDate *)lastSendTime;
 
 /* App State */
+
+/**
+ * The application entering the foreground.
+ */
 - (void)enterForeground;
+
+/**
+ * The application entering the background.
+ */
 - (void)enterBackground;
+
+/**
+ * The application did become active.
+ */
 - (void)didBecomeActive;
+
+/**
+ * The application will resign active.
+ */
 - (void)willResignActive;
 
 /* Network connectivity */
+
+/**
+ * Capture the connection type when the network has changed.
+ */
 - (void)refreshSessionWhenNetworkChanged;
+
+/**
+ * Refresh the session when the application becomes active.
+ */
 - (void)refreshSessionWhenActive;
 
-/* Invalidate the background task that will be running
- if the app has been backgrounded after being active. */
+/**
+ * Invalidate the background task that will be running
+ * if the app has been backgrounded after being active.
+ */
 - (void)invalidateBackgroundTask;
 
-/* Generate an analytics request with the proper fields */
+/**
+ * Generate an analytics request with the proper fields
+ */
 - (UAHTTPRequest *)analyticsRequest;
 
-/* Clean up event data for sending
- Enforce max batch limits
- Loop through events and discard DB-only items
- format the JSON field as a dictionary
+/**
+ * Prepare the event data for sending. Enforce max batch limits.
+ * Loop through events and discard DB-only items, format the
+ * JSON data field as a dictionary.
  */
-- (NSArray*)prepareEventsForUpload;
+- (NSArray *)prepareEventsForUpload;
 
-/* Removes old events from the database until the 
- size of the database is less then databaseSize
+/**
+ * Removes old events from the database until the
+ * size of the database is less then databaseSize
  */
 - (void) pruneEvents;
 
-/** Checks a event dictionary for expected fields
- and values */
+/**
+ * Checks a event dictionary for expected fields and values.
+ * @param event The event as an NSMutableDictionary to validate.
+ */
 - (BOOL) isEventValid:(NSMutableDictionary *)event;
 
 @end

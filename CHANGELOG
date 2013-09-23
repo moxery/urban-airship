@@ -1,17 +1,50 @@
+--------------------------
+3.0.0 - September 18, 2013
+--------------------------
+- Removed iOS 4 support. This library version supports iOS 5, 6 and 7.
+- Converted to ARC (Automatic Reference Counting).
+- Removed SBJSON and replaced with NSJSONSerialization.
+- Removed FMDB and replaced with CoreData.
+- Removed UAInboxCache.
+- Use Urban Airship API V3 'Accepts' Header.
+- Send Push Address in request header for location events.
+- Added logging for iOS registration.
+- Deprecated UAObservable and all related protocols/methods.
+- UAPush has a registrationDelegate and the "delegate" property has been deprecated and renamed pushNotificationDelegate.
+- UAInboxMessageList/UAInboxMessage exposes new block and delegate-based APIs.
+
+--------------------------
+2.1.0 - September 18, 2013
+--------------------------
+- Added background push notification support.
+- Added 64bit compatibility when building from source (Shipped binaries only contain 32bit support).
+- Improved the automatic integration feature by allowing app delegates to inherit from additional classes and protocols.
+- Fixed inbox message webview layout for iOS7 in sample UI.
+- Fixed a possible crash in UAObservable.
+
+-------------------------
+2.0.4 - September 5, 2013
+-------------------------
+- Fixed a bug that could cause failing Inbox API requests to retry indefinitely.
+- Fixed Inbox database schema error resulting in the Inbox message list to be unavailable when the device is offline.
+
 -------------------------
 2.0.3 - August 23, 2013
 -------------------------
 - Fixed an analytics bug where opening an application for the first time from a push notification would not count it
 as a direct open.
+
 -------------------------
 2.0.2 - August 15, 2013
 -------------------------
 - Added the entire raw message object to UAInboxMessage to be able to retrieve data that is missing from the model.
+
 -------------------------
 2.0.1 - August 7, 2013
 -------------------------
 - Fixed a bug in UAHTTPConnectionOperation causing intermittent crashes
   during push registration.
+  
 -------------------------
 2.0.0 - July 23, 2013
 -------------------------

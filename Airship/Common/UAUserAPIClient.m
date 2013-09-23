@@ -5,11 +5,10 @@
 #import "UAHTTPRequestEngine.h"
 #import "UAUtils.h"
 #import "UAPush.h"
-#import "UA_SBJsonWriter.h"
-#import "UA_SBJsonParser.h"
+#import "NSJSONSerialization+UAAdditions.h"
 
 @interface UAUserAPIClient()
-@property(nonatomic, retain) UAHTTPRequestEngine *requestEngine;
+@property(nonatomic, strong) UAHTTPRequestEngine *requestEngine;
 @end
 
 @implementation UAUserAPIClient
@@ -17,16 +16,12 @@
 - (id)init {
     self = [super init];
     if (self) {
-        self.requestEngine= [[[UAHTTPRequestEngine alloc] init] autorelease];
+        self.requestEngine= [[UAHTTPRequestEngine alloc] init];
     }
 
     return self;
 }
 
-- (void)dealloc {
-    self.requestEngine = nil;
-    [super dealloc];
-}
 
 - (NSDictionary *)createUserDictionaryWithDeviceToken:(NSString *)deviceToken {
 
@@ -47,14 +42,11 @@
 
     NSURL *createUrl = [NSURL URLWithString:urlString];
     UAHTTPRequest *request = [UAUtils UAHTTPRequestWithURL:createUrl method:@"POST"];
+    [request addRequestHeader:@"Content-Type" value:@"application/json"];
+    [request addRequestHeader:@"Accept" value:@"application/vnd.urbanairship+json; version=3;"];
 
     NSDictionary *data = [self createUserDictionaryWithDeviceToken:deviceToken];
-
-
-    UA_SBJsonWriter *writer = [[[UA_SBJsonWriter alloc] init] autorelease];
-    NSString *body = [writer stringWithObject:data];
-
-    [request addRequestHeader:@"Content-Type" value:@"application/json"];
+    NSString *body = [NSJSONSerialization stringWithObject:data];
     [request appendBodyData:[body dataUsingEncoding:NSUTF8StringEncoding]];
 
     UA_LDEBUG(@"Request to create user with body: %@", body);
@@ -77,10 +69,9 @@
     UAHTTPRequest *request = [UAUtils UAHTTPUserRequestWithURL:updateUrl method:@"POST"];
 
     [request addRequestHeader:@"Content-Type" value:@"application/json"];
+    [request addRequestHeader:@"Accept" value:@"application/vnd.urbanairship+json; version=3;"];
 
-    UA_SBJsonWriter *writer = [[UA_SBJsonWriter new] autorelease];
-    NSString *body = [writer stringWithObject:dict];
-
+    NSString *body = [NSJSONSerialization stringWithObject:dict];
     [request appendBodyData:[body dataUsingEncoding:NSUTF8StringEncoding]];
 
     UA_LTRACE(@"Request to update user with content: %@", body);
@@ -105,10 +96,10 @@
         return (BOOL)(status == 201);
     } retryWhere:^(UAHTTPRequest *request) {
         NSInteger status = request.response.statusCode;
-        return (BOOL)(status >= 500 && status <= 599);
+        return (BOOL)((status >= 500 && status <= 599) || request.error);
     } onSuccess:^(UAHTTPRequest *request, NSUInteger lastDelay) {
-        UA_SBJsonParser *parser = [[[UA_SBJsonParser alloc] init] autorelease];
-        NSDictionary *result = [parser objectWithString:request.responseString];
+
+        NSDictionary *result = [NSJSONSerialization objectWithString:request.responseString];
 
         NSString *username = [result objectForKey:@"user_id"];
         NSString *password = [result objectForKey:@"password"];
@@ -143,7 +134,7 @@
         return (BOOL)(status == 200 || status == 201);
     } retryWhere:^(UAHTTPRequest *request) {
         NSInteger status = request.response.statusCode;
-        return (BOOL)(status >= 500 && status <= 599);
+        return (BOOL)((status >= 500 && status <= 599) || request.error);
     } onSuccess:^(UAHTTPRequest *request, NSUInteger lastDelay) {
         // The dictionary for the post body is built as follows in updateDeviceToken
         //    "device_tokens" =     {
@@ -153,12 +144,12 @@
         //    };
         // That's what we expect here, an NSDictionary for the key @"device_tokens" with a single NSArray for the key @"add"
 
-        UA_LTRACE(@"Update Device Token succeeded with response: %d", [request.response statusCode]);
+        UA_LTRACE(@"Update Device Token succeeded with response: %ld", (long)[request.response statusCode]);
 
-        NSString *rawJson = [[[NSString alloc] initWithData:request.body  encoding:NSASCIIStringEncoding] autorelease];
-        UA_SBJsonParser *parser = [[[UA_SBJsonParser alloc] init] autorelease];
+        NSString *rawJson = [[NSString alloc] initWithData:request.body  encoding:NSASCIIStringEncoding];
+
         // If there is an error, it already failed on the server, and didn't get back here, so no use checking for JSON error
-        NSDictionary *postBody = [parser objectWithString:rawJson];
+        NSDictionary *postBody = [NSJSONSerialization objectWithString:rawJson];
         NSArray *add = [[postBody valueForKey:@"device_tokens"] valueForKey:@"add"];
         NSString *successfullyUploadedDeviceToken = ([add count] >= 1) ? [add objectAtIndex:0] : nil;
 
@@ -172,7 +163,7 @@
         if (request.response) {
             // If we got an other than 200/201, that's just odd
 
-            UA_LDEBUG(@"Update request did not succeed with expected response: %d", [request.response statusCode]);
+            UA_LDEBUG(@"Update request did not succeed with expected response: %ld", (long)[request.response statusCode]);
         } else {
             UA_LDEBUG(@"Update request failed");
         }

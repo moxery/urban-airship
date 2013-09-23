@@ -31,7 +31,6 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #import "UAInboxDBManager.h"
 #import "UAInboxMessageList.h"
 #import "UAInboxPushHandler.h"
-#import "UAInboxURLCache.h"
 #import "UAInboxMessage.h"
 #import "UAUser.h"
 
@@ -59,7 +58,11 @@ static Class _uiClass;
 }
 
 - (void)enterForeground {
-    [self.messageList retrieveMessageList];
+    [self.messageList retrieveMessageListWithDelegate:nil];
+}
+
+- (void)userCreated {
+    [self.messageList retrieveMessageListWithDelegate:nil];
 }
 
 #pragma mark -
@@ -73,12 +76,6 @@ static Class _uiClass;
 #pragma mark Open API, enter/quit Inbox
 
 + (void)displayInboxInViewController:(UIViewController *)parentViewController animated:(BOOL)animated {
-    //if configured to use the inbox cache, swap it in here
-    @synchronized(self) {
-        if (g_sharedUAInbox.shouldUseInboxCache) {
-            [NSURLCache setSharedURLCache:[UAInbox shared].inboxCache];
-        }
-    }
     [[[UAInbox shared] uiClass] displayInboxInViewController:parentViewController animated:animated];
 }
 
@@ -89,13 +86,6 @@ static Class _uiClass;
 
 + (void)quitInbox {
     [[[UAInbox shared] uiClass] quitInbox];
-    //swap out the inbox cache if it's currently in place
-    //(the value of shouldUseInboxCache may have changed, but we'll want to swap it out regardles
-    @synchronized(self) {
-        if ([[NSURLCache sharedURLCache] isEqual:g_sharedUAInbox.inboxCache]) {
-            [NSURLCache setSharedURLCache:[UAInbox shared].clientCache];
-        }
-    }
 }
 
 + (void)land {
@@ -107,8 +97,24 @@ static Class _uiClass;
         [[g_sharedUAInbox uiClass]land];
         [UAInboxMessageList land];
         
-        [g_sharedUAInbox release];
         g_sharedUAInbox = nil;
+    }
+}
+
+//note: this is for deleting the UAInboxCache from disk, which is no longer in use.
+- (void)deleteInboxCache{
+    NSArray *cachePaths = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
+    NSString *cacheDirectory = [cachePaths objectAtIndex:0];
+    NSString *diskCachePath = [NSString stringWithFormat:@"%@/%@", cacheDirectory, @"UAInboxCache"];
+
+    NSFileManager *fm = [NSFileManager defaultManager];
+
+    if ([fm fileExistsAtPath:diskCachePath]) {
+        NSError *error = nil;
+        [fm removeItemAtPath:diskCachePath error:&error];
+        if (error) {
+            UA_LINFO(@"error deleting inbox cache: %@", error.description);
+        }
     }
 }
 
@@ -118,21 +124,11 @@ static Class _uiClass;
 - (id)init {
     self = [super init];
     if (self) {
-        // create the DB and clear out legacy info
-        // prior to creating the new caches directory
-        [UAInboxDBManager shared];
-
-        self.clientCache = [NSURLCache sharedURLCache];
-
-        //use the inbox cache by default
-        self.shouldUseInboxCache = YES;
-        [self initInboxCache];
-        
         self.messageList = [UAInboxMessageList shared];
         
-        [self.messageList retrieveMessageList];
+        [self.messageList retrieveMessageListWithDelegate:nil];
 		
-		self.pushHandler = [[[UAInboxPushHandler alloc] init] autorelease];
+		self.pushHandler = [[UAInboxPushHandler alloc] init];
 
         [self.messageList addObserver:self.pushHandler];
 
@@ -141,51 +137,23 @@ static Class _uiClass;
                                                     name:UIApplicationWillEnterForegroundNotification
                                                   object:nil];
 
+        if (![[UAUser defaultUser] defaultUserCreated]) {
+            [[NSNotificationCenter defaultCenter] addObserver:self
+                                                     selector:@selector(userCreated)
+                                                         name:UAUserCreatedNotification object:nil];
+        }
+
+        //delete legacy UAInboxCache if present
+        [self deleteInboxCache];
     }
 
     return self;
 }
 
-- (void)initInboxCache {
-
-    NSArray *cachePaths = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
-    NSString *cacheDirectory = [cachePaths objectAtIndex:0];
-    NSString *diskCachePath = [NSString stringWithFormat:@"%@/%@", cacheDirectory, @"UAInboxCache"];
-    NSError *error;
-
-    [[NSFileManager defaultManager] createDirectoryAtPath:diskCachePath
-                              withIntermediateDirectories:YES
-                                               attributes:nil error:&error];
-
-    self.inboxCache = [[[UAInboxURLCache alloc] initWithMemoryCapacity:1024*1024
-                                                          diskCapacity:10*1024*1024
-                                                              diskPath:diskCachePath] autorelease];
-}
-
-- (void)setShouldUseInboxCache:(BOOL)shouldUseInboxCache {
-    //sync on the class object so that we can be consistent with
-    //display/quitInbox
-    @synchronized([self class]) {
-        _shouldUseInboxCache = shouldUseInboxCache;
-        if (shouldUseInboxCache) {
-            if (!self.inboxCache) {
-                [self initInboxCache];
-            }
-        } else {
-            self.inboxCache = nil;
-        }
-    }
-}
-
 - (void)dealloc {
     [self.messageList removeObserver:self.pushHandler];
     [[NSNotificationCenter defaultCenter] removeObserver:self];
-
-    self.clientCache = nil;
-    self.inboxCache = nil;
     self.pushHandler = nil;
-
-    [super dealloc];
 }
 
 @end

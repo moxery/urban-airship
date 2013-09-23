@@ -27,7 +27,6 @@
 #import "UAHTTPRequest+Internal.h"
 
 #import "UAGlobal.h"
-#import "UAInboxURLCache.h"
 #import "UA_Base64.h"
 #import <zlib.h>
 
@@ -37,7 +36,7 @@
 
 
 + (UAHTTPConnection *)connectionWithRequest:(UAHTTPRequest *)httpRequest {
-    return [[[UAHTTPConnection alloc] initWithRequest:httpRequest] autorelease];
+    return [[UAHTTPConnection alloc] initWithRequest:httpRequest];
 }
 
 + (UAHTTPConnection *)connectionWithRequest:(UAHTTPRequest *)httpRequest
@@ -74,15 +73,6 @@
     return self;
 }
 
-- (void)dealloc {
-    self.urlResponse = nil;
-    self.urlConnection = nil;
-    self.request = nil;
-    self.responseData = nil;
-    self.successBlock = nil;
-    self.failureBlock = nil;
-    [super dealloc];
-}
 
 - (NSURLRequest *)buildRequest {
     if (self.urlConnection) {
@@ -147,7 +137,6 @@
     }
 
     // keep ourselves around for a while so the request can complete
-    [self retain];
 
     self.responseData = [NSMutableData data];
     self.urlConnection = [NSURLConnection connectionWithRequest:urlRequest delegate:self];
@@ -162,11 +151,11 @@
         return NO;
     }
 
+    NSHTTPURLResponse *response = nil;
     NSError *error = nil;
+    self.responseData = [[NSURLConnection sendSynchronousRequest:urlRequest returningResponse:&response error:&error] mutableCopy];
 
-    self.responseData = [[[NSURLConnection sendSynchronousRequest:urlRequest returningResponse:&_urlResponse error:&error] mutableCopy] autorelease];
-
-    self.request.response = self.urlResponse;
+    self.request.response = self.urlResponse = response;
     self.request.responseData = self.responseData;
     self.request.error = error;
 
@@ -193,7 +182,9 @@
     UA_LDEBUG(@"ERROR: connection %@ didFailWithError: %@", self, error);
     self.request.error = error;
     if ([self.delegate respondsToSelector:self.failureSelector]) {
-        [self.delegate performSelector:self.failureSelector withObject:_request];
+        UA_SUPPRESS_PERFORM_SELECTOR_LEAK_WARNING(
+            [self.delegate performSelector:self.failureSelector withObject:_request]
+        );
     }
 
     if (self.failureBlock) {
@@ -203,7 +194,6 @@
     self.failureBlock = nil;
     self.successBlock = nil;
     
-    [self release];
 }
 
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection {
@@ -212,7 +202,9 @@
     self.request.responseData = self.responseData;
     
     if ([self.delegate respondsToSelector:self.successSelector]) {
-        [self.delegate performSelector:self.successSelector withObject:self.request];
+        UA_SUPPRESS_PERFORM_SELECTOR_LEAK_WARNING(
+            [self.delegate performSelector:self.successSelector withObject:self.request]
+        );
     }
 
     if (self.successBlock) {
@@ -222,16 +214,6 @@
     self.failureBlock = nil;
     self.successBlock = nil;
     
-    [self release];
-}
-
-- (NSCachedURLResponse *)connection:(NSURLConnection *)connection
-                  willCacheResponse:(NSCachedURLResponse *)cachedResponse {
-    if ([[NSURLCache sharedURLCache] isKindOfClass:[UAInboxURLCache class]]) {
-        return nil;
-    } else {
-        return cachedResponse;
-    }
 }
 
 #pragma mark GZIP compression
@@ -251,7 +233,7 @@
     strm.opaque = Z_NULL;
     strm.total_out = 0;
     strm.next_in=(Bytef *)[uncompressedData bytes];
-    strm.avail_in = [uncompressedData length];
+    strm.avail_in = (uInt)[uncompressedData length];
 
     if (deflateInit2(&strm, Z_DEFAULT_COMPRESSION, Z_DEFLATED, (15+16), 8, Z_DEFAULT_STRATEGY) != Z_OK) {
         return nil;
@@ -266,7 +248,7 @@
         }
 
         strm.next_out = [compressed mutableBytes] + strm.total_out;
-        strm.avail_out = [compressed length] - strm.total_out;
+        strm.avail_out = (uInt)([compressed length] - strm.total_out);
 
         status = deflate(&strm, Z_FINISH);
         
