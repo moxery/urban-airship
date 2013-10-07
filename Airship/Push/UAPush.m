@@ -486,12 +486,15 @@ static Class _uiClass;
         // Badge
         NSString *badgeNumber = [apsDict valueForKey:@"badge"];
 
-        if (badgeNumber) {
+        if ( [badgeNumber respondsToSelector:@selector(intValue)] ) {
             if (self.autobadgeEnabled) {
                 [[UIApplication sharedApplication] setApplicationIconBadgeNumber:[badgeNumber intValue]];
             } else if ([self.pushNotificationDelegate respondsToSelector:@selector(handleBadgeUpdate:)]) {
                 [self.pushNotificationDelegate handleBadgeUpdate:[badgeNumber intValue]];
 			}
+        }
+        else if ( badgeNumber ) {
+            UA_LTRACE(@"Received invalid badge data: %@", badgeNumber);
         }
 
         // Sound
